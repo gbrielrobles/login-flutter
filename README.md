@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # trabalho-tela-login-2024
 
 Vocês deverão desenvolver uma página de login utilizando o framework Flutter, baseando-se no código fornecido abaixo. A tarefa inclui adaptar tanto a lógica quanto o layout conforme as necessidades do projeto proposto.
@@ -13,3 +14,6 @@ Certifiquem-se de que o aplicativo resultante seja funcional, intuitivo, respons
 Qualquer dúvida ou problema durante o desenvolvimento, não hesitem em entrar em contato para obter orientações adicionais.
 
 Este trabalho deverá ser feito em grupo de até quatro pessoas, em que os integrantes do grupo serão os mesmos integrantes do grupo do projeto interdisciplinar.
+=======
+# login-flutter
+>>>>>>> 8b637ae60481d606369d3b60dae1f5c5c4153e17
