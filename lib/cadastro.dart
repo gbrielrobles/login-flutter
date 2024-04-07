@@ -14,12 +14,81 @@ class Cadastro extends StatelessWidget {
       home: Scaffold(
         appBar: AppBar(
           backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
+          leading: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Center(
+                  child: Image.asset(
+                    'assets/unicv-logo-site.png',
+                    height: 40, // Altura da imagem
+                    width: 40, // Largura da imagem
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-        backgroundColor: Color.fromRGBO(230, 231, 232, 1),
-        body: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: CadastroForm(),
+        backgroundColor: const Color.fromRGBO(58, 92, 51, 1), // Define o fundo verde
+        body: Container(
+          height: double.infinity, // Define a altura como infinita
+          color: const Color.fromRGBO(58, 92, 51, 1), // Define o fundo verde para a tela inteira
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Container(
+                    padding: const EdgeInsets.all(20.0),
+                    child: CadastroForm(),
+                  ),
+                ),
+              ),
+              Container(
+                color: const Color.fromRGBO(239, 153, 45, 1),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        icon: Icon(Icons.arrow_back),
+                        label: Text('Cancelar', style: TextStyle(color: Colors.white)), // Define o texto como branco
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(50),
+                          ),
+                          backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          _CadastroFormState? formState = CadastroForm.of(context);
+                          if (formState != null && formState.validate()) {
+                            formState.save();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Cadastro realizado com sucesso!', style: TextStyle(color: Colors.white)), // Define o texto como branco
+                              ),
+                            );
+                          }
+                        },
+                        icon: Icon(Icons.arrow_forward),
+                        label: Text('Concluir', style: TextStyle(color: Colors.white)), // Define o texto como branco
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(50),
+                          ),
+                          backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -32,6 +101,10 @@ class CadastroForm extends StatefulWidget {
 
   @override
   _CadastroFormState createState() => _CadastroFormState();
+
+  static _CadastroFormState? of(BuildContext context) {
+    return context.findAncestorStateOfType<_CadastroFormState>();
+  }
 }
 
 class _CadastroFormState extends State<CadastroForm> {
@@ -46,16 +119,14 @@ class _CadastroFormState extends State<CadastroForm> {
 
   List<bool> _selections = List.generate(3, (_) => false);
 
-  void _cadastrar() {
-    if (!_chaveForm.currentState!.validate()) {
-      return;
-    }
+  bool validate() {
+    return _chaveForm.currentState!.validate();
+  }
 
+  void save() {
     _chaveForm.currentState!.save();
-
-    // Faça o que for necessário com os dados do formulário
     _logger.d(
-        'Nome de Usuário: $_nomeUsuario, Senha: $_senha, Email: $_email, Tipo de Usuário: $_tipoUsuario');
+        'Nome de Usuário: $_nomeUsuario, Senha: $_senha, Email: $_email, Tipo de Usuário: $_tipoUsuario, R.A.: $_ra');
   }
 
   final TextEditingController _confirmarSenhaController =
@@ -71,6 +142,8 @@ class _CadastroFormState extends State<CadastroForm> {
           TextFormField(
             decoration: InputDecoration(
               labelText: 'Nome de Usuário',
+              filled: true,
+              fillColor: Colors.white, // Define a cor de fundo como branca
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(50.0),
               ),
@@ -89,6 +162,8 @@ class _CadastroFormState extends State<CadastroForm> {
           TextFormField(
             decoration: InputDecoration(
               labelText: 'Senha',
+              filled: true,
+              fillColor: Colors.white, // Define a cor de fundo como branca
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(50.0),
               ),
@@ -109,6 +184,8 @@ class _CadastroFormState extends State<CadastroForm> {
             controller: _confirmarSenhaController,
             decoration: InputDecoration(
               labelText: 'Confirme sua senha',
+              filled: true,
+              fillColor: Colors.white, // Define a cor de fundo como branca
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(50.0),
               ),
@@ -127,6 +204,8 @@ class _CadastroFormState extends State<CadastroForm> {
           TextFormField(
             decoration: InputDecoration(
               labelText: 'E-mail',
+              filled: true,
+              fillColor: Colors.white, // Define a cor de fundo como branca
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(50.0),
               ),
@@ -141,6 +220,12 @@ class _CadastroFormState extends State<CadastroForm> {
             onSaved: (value) {
               _email = value!;
             },
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Você é?',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white), // Define a cor do texto como branco
           ),
           const SizedBox(height: 12),
           Row(
@@ -194,17 +279,18 @@ class _CadastroFormState extends State<CadastroForm> {
             ],
           ),
           const SizedBox(height: 12),
-           TextFormField(
+          TextFormField(
             decoration: InputDecoration(
               labelText: 'R.A Institucional',
+              filled: true,
+              fillColor: Colors.white, // Define a cor de fundo como branca
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(50.0),
               ),
             ),
-            obscureText: true,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Por favor, insira uma senha válida.';
+                return 'Por favor, insira um R.A válido.';
               }
               return null;
             },
@@ -213,16 +299,6 @@ class _CadastroFormState extends State<CadastroForm> {
             },
           ),
           const SizedBox(height: 12),
-          ElevatedButton(
-            onPressed: _cadastrar,
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(50),
-              ),
-              backgroundColor: Colors.green,
-            ),
-            child: Text('Cadastrar'),
-          ),
         ],
       ),
     );
