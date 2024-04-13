@@ -14,25 +14,21 @@ class Cadastro extends StatelessWidget {
       home: Scaffold(
         appBar: AppBar(
           backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
-          leading: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Center(
-                  child: Image.asset(
-                    'assets/unicv-logo-site.png',
-                    height: 40, // Altura da imagem
-                    width: 40, // Largura da imagem
-                  ),
-                ),
-              ),
-            ],
+          flexibleSpace: Center(
+            // Centralizar a imagem
+            child: Image.asset(
+              'assets/unicv-logo-site.png',
+              height: 90, // Aumentar altura da imagem
+              width: 90, // Aumentar largura da imagem
+            ),
           ),
         ),
-        backgroundColor: const Color.fromRGBO(58, 92, 51, 1), // Define o fundo verde
+        backgroundColor:
+            const Color.fromRGBO(58, 92, 51, 1), // Define o fundo verde
         body: Container(
           height: double.infinity, // Define a altura como infinita
-          color: const Color.fromRGBO(58, 92, 51, 1), // Define o fundo verde para a tela inteira
+          color: const Color.fromRGBO(
+              58, 92, 51, 1), // Define o fundo verde para a tela inteira
           child: Column(
             children: [
               Expanded(
@@ -55,33 +51,45 @@ class Cadastro extends StatelessWidget {
                           Navigator.pop(context);
                         },
                         icon: Icon(Icons.arrow_back),
-                        label: Text('Cancelar', style: TextStyle(color: Colors.white)), // Define o texto como branco
+                        label: Text('Cancelar',
+                            style: TextStyle(
+                                color: Colors
+                                    .white)), // Define o texto como branco
                         style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(50),
                           ),
-                          backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
+                          backgroundColor:
+                              const Color.fromRGBO(239, 153, 45, 1),
                         ),
                       ),
                       ElevatedButton.icon(
                         onPressed: () {
-                          _CadastroFormState? formState = CadastroForm.of(context);
+                          _CadastroFormState? formState =
+                              CadastroForm.of(context);
                           if (formState != null && formState.validate()) {
                             formState.save();
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Cadastro realizado com sucesso!', style: TextStyle(color: Colors.white)), // Define o texto como branco
+                                content: Text('Cadastro realizado com sucesso!',
+                                    style: TextStyle(
+                                        color: Colors
+                                            .white)), // Define o texto como branco
                               ),
                             );
                           }
                         },
                         icon: Icon(Icons.arrow_forward),
-                        label: Text('Concluir', style: TextStyle(color: Colors.white)), // Define o texto como branco
+                        label: Text('Concluir',
+                            style: TextStyle(
+                                color: Colors
+                                    .white)), // Define o texto como branco
                         style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(50),
                           ),
-                          backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
+                          backgroundColor:
+                              const Color.fromRGBO(239, 153, 45, 1),
                         ),
                       ),
                     ],
@@ -212,7 +220,9 @@ class _CadastroFormState extends State<CadastroForm> {
             ),
             keyboardType: TextInputType.emailAddress,
             validator: (value) {
-              if (value == null || value.trim().isEmpty || !value.contains('@')) {
+              if (value == null ||
+                  value.trim().isEmpty ||
+                  !value.contains('@')) {
                 return 'Por favor, insira um endereço de email válido.';
               }
               return null;
@@ -225,7 +235,10 @@ class _CadastroFormState extends State<CadastroForm> {
           Text(
             'Você é?',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white), // Define a cor do texto como branco
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white), // Define a cor do texto como branco
           ),
           const SizedBox(height: 12),
           Row(

@@ -20,24 +20,44 @@ class _TelaLoginState extends State<TelaLogin> {
   var _senhaInserida = '';
   final String _nomeUsuarioInserido = '';
   final Logger _logger = Logger();
+  bool _erroValidacao =
+      false; // Variável para controlar se houve erro de validação
 
   void _enviar() async {
+    setState(() {
+      _erroValidacao = false; // Reinicia o estado de erro de validação
+    });
+
     if (!_chaveForm.currentState!.validate()) {
+      setState(() {
+        _erroValidacao =
+            true; // Define o estado de erro de validação como verdadeiro
+      });
       return;
     }
 
     _chaveForm.currentState!.save();
 
     try {
-      if (_modoLogin) {
-        //logar usuario
-        _logger.d('Usuário Logado. Email: $_emailInserido, Senha: $_senhaInserida');
+      if (_emailInserido == 'admin') {
+        if (_modoLogin) {
+          //logar usuario
+          _logger.d(
+              'Usuário Logado. Email: $_emailInserido, Senha: $_senhaInserida');
+          _exibirPopup('Login bem-sucedido', 'Usuário logado com sucesso!');
+        } else {
+          //criar usuario
+          _logger.d(
+              'Usuário Criado. Email: $_emailInserido, Senha: $_senhaInserida, Nome de Usuário: $_nomeUsuarioInserido');
+        }
       } else {
-        //criar usuario
-        _logger.d('Usuário Criado. Email: $_emailInserido, Senha: $_senhaInserida, Nome de Usuário: $_nomeUsuarioInserido');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Credenciais inválidas.'),
+          ),
+        );
       }
     } catch (_) {
-      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Falha na autenticação.'),
@@ -46,8 +66,29 @@ class _TelaLoginState extends State<TelaLogin> {
     }
   }
 
+  void _exibirPopup(String titulo, String mensagem) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(titulo),
+          content: Text(mensagem),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _irParaCadastro(BuildContext context) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (context) => Cadastro()));
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => Cadastro()));
   }
 
   @override
@@ -62,73 +103,85 @@ class _TelaLoginState extends State<TelaLogin> {
           children: [
             Center(
               child: SingleChildScrollView(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      margin: const EdgeInsets.only(
-                        top: 30,
-                        bottom: 20,
-                        left: 20,
-                        right: 20,
-                      ),
-                      width: 200,
-                      child: Image.asset('assets/unicv-logo-site.png'),
-                    ),
-                    SizedBox(
-                      width: 250,
-                      child: TextFormField(
-                        decoration: InputDecoration(
-                          labelText: 'Endereço de Email',
-                          border: const OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(50.0)),
-                          ),
+                child: Form(
+                  key: _chaveForm,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.only(
+                          top: 1,
+                          bottom: 80,
+                          left: 20,
+                          right: 20,
                         ),
-                        keyboardType: TextInputType.emailAddress,
-                        autocorrect: false,
-                        textCapitalization: TextCapitalization.none,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty || !value.contains('@')) {
-                            return 'Por favor, insira um endereço de email válido.';
-                          }
-                          return null;
-                        },
-                        onSaved: (value) {
-                          _emailInserido = value!;
-                        },
+                        width: 300,
+                        child: Image.asset('assets/unicv-logo-site.png'),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: 250,
-                      child: TextFormField(
-                        decoration: InputDecoration(
-                          labelText: 'Senha',
-                          border: const OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(50.0)),
+                      SizedBox(
+                        width: 250,
+                        child: TextFormField(
+                          decoration: InputDecoration(
+                            labelText: 'Endereço de Email',
+                            border: const OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(50.0)),
+                            ),
+                            errorText: _erroValidacao
+                                ? 'Endereço de email inválido'
+                                : null, // Define texto de erro e cor em caso de erro
                           ),
+                          keyboardType: TextInputType.emailAddress,
+                          autocorrect: false,
+                          textCapitalization: TextCapitalization.none,
+                          validator: (value) {
+                            if (value == null) {
+                              return 'Por favor, insira um endereço de email válido.';
+                            }
+                            return null;
+                          },
+                          onSaved: (value) {
+                            _emailInserido = value!;
+                          },
                         ),
-                        obscureText: true,
-                        validator: (value) {
-                          if (value == null || value.trim().length < 6) {
-                            return 'A senha deve ter pelo menos 6 caracteres.';
-                          }
-                          return null;
-                        },
-                        onSaved: (value) {
-                          _senhaInserida = value!;
-                        },
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: _enviar,
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all<Color>(Colors.green),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: 250,
+                        child: TextFormField(
+                          decoration: InputDecoration(
+                            labelText: 'Senha',
+                            border: const OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(50.0)),
+                            ),
+                            errorText: _erroValidacao
+                                ? 'Senha inválida'
+                                : null, // Define texto de erro e cor em caso de erro
+                          ),
+                          obscureText: true,
+                          validator: (value) {
+                            if (value == null) {
+                              return 'A senha deve ter pelo menos 6 caracteres.';
+                            }
+                            return null;
+                          },
+                          onSaved: (value) {
+                            _senhaInserida = value!;
+                          },
+                        ),
                       ),
-                      child: Text(_modoLogin ? 'Entrar' : 'Cadastrar'),
-                    ),
-                  ],
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: _enviar,
+                        style: ButtonStyle(
+                          backgroundColor:
+                              MaterialStateProperty.all<Color>(Colors.green),
+                        ),
+                        child: Text(_modoLogin ? 'Entrar' : 'Cadastrar'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -141,13 +194,13 @@ class _TelaLoginState extends State<TelaLogin> {
                 height: 50,
                 alignment: Alignment.center,
                 child: TextButton(
-                    onPressed: () {
-                      _irParaCadastro(context); // Use a função _irParaCadastro
-                    },
-                    child: Text(
-                      'Não possui uma conta? Registre-se Aqui',
-                      style: TextStyle(color: Colors.white),
-                    ),
+                  onPressed: () {
+                    _irParaCadastro(context);
+                  },
+                  child: Text(
+                    'Não possui uma conta? Registre-se Aqui',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ),
             ),
