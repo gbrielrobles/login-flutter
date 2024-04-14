@@ -65,31 +65,39 @@ class Cadastro extends StatelessWidget {
                       ),
                       ElevatedButton.icon(
                         onPressed: () {
-                          _CadastroFormState? formState =
-                              CadastroForm.of(context);
+                          _CadastroFormState? formState = CadastroForm.of(context);
                           if (formState != null && formState.validate()) {
                             formState.save();
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Cadastro realizado com sucesso!',
-                                    style: TextStyle(
-                                        color: Colors
-                                            .white)), // Define o texto como branco
+                                content: Text(
+                                  'Cadastro realizado com sucesso!',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Por favor, preencha todos os campos!',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                backgroundColor: Colors.red,
                               ),
                             );
                           }
                         },
                         icon: Icon(Icons.arrow_forward),
-                        label: Text('Concluir',
-                            style: TextStyle(
-                                color: Colors
-                                    .white)), // Define o texto como branco
+                        label: Text(
+                          'Concluir',
+                          style: TextStyle(color: Colors.white),
+                        ),
                         style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(50),
                           ),
-                          backgroundColor:
-                              const Color.fromRGBO(239, 153, 45, 1),
+                          backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
                         ),
                       ),
                     ],
@@ -128,6 +136,15 @@ class _CadastroFormState extends State<CadastroForm> {
   List<bool> _selections = List.generate(3, (_) => false);
 
   bool validate() {
+    _selections = [false, false, false];
+    if (_tipoUsuario == 'Estudante') {
+      _selections[0] = true;
+    } else if (_tipoUsuario == 'Professor') {
+      _selections[1] = true;
+    } else if (_tipoUsuario == 'Coordenador') {
+      _selections[2] = true;
+    }
+
     return _chaveForm.currentState!.validate();
   }
 
@@ -151,7 +168,7 @@ class _CadastroFormState extends State<CadastroForm> {
             decoration: InputDecoration(
               labelText: 'Nome de Usuário',
               filled: true,
-              fillColor: Colors.white, // Define a cor de fundo como branca
+              fillColor: Colors.white,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(50.0),
               ),
@@ -171,7 +188,7 @@ class _CadastroFormState extends State<CadastroForm> {
             decoration: InputDecoration(
               labelText: 'Senha',
               filled: true,
-              fillColor: Colors.white, // Define a cor de fundo como branca
+              fillColor: Colors.white,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(50.0),
               ),
@@ -193,7 +210,7 @@ class _CadastroFormState extends State<CadastroForm> {
             decoration: InputDecoration(
               labelText: 'Confirme sua senha',
               filled: true,
-              fillColor: Colors.white, // Define a cor de fundo como branca
+              fillColor: Colors.white,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(50.0),
               ),
@@ -213,7 +230,7 @@ class _CadastroFormState extends State<CadastroForm> {
             decoration: InputDecoration(
               labelText: 'E-mail',
               filled: true,
-              fillColor: Colors.white, // Define a cor de fundo como branca
+              fillColor: Colors.white,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(50.0),
               ),
@@ -238,7 +255,7 @@ class _CadastroFormState extends State<CadastroForm> {
             style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.white), // Define a cor do texto como branco
+                color: Colors.white),
           ),
           const SizedBox(height: 12),
           Row(
@@ -248,7 +265,6 @@ class _CadastroFormState extends State<CadastroForm> {
                 onPressed: () {
                   setState(() {
                     _tipoUsuario = 'Estudante';
-                    _selections = [true, false, false];
                   });
                 },
                 style: ElevatedButton.styleFrom(
@@ -263,7 +279,6 @@ class _CadastroFormState extends State<CadastroForm> {
                 onPressed: () {
                   setState(() {
                     _tipoUsuario = 'Professor';
-                    _selections = [false, true, false];
                   });
                 },
                 style: ElevatedButton.styleFrom(
@@ -278,7 +293,6 @@ class _CadastroFormState extends State<CadastroForm> {
                 onPressed: () {
                   setState(() {
                     _tipoUsuario = 'Coordenador';
-                    _selections = [false, false, true];
                   });
                 },
                 style: ElevatedButton.styleFrom(
@@ -296,7 +310,7 @@ class _CadastroFormState extends State<CadastroForm> {
             decoration: InputDecoration(
               labelText: 'R.A Institucional',
               filled: true,
-              fillColor: Colors.white, // Define a cor de fundo como branca
+              fillColor: Colors.white,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(50.0),
               ),

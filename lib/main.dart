@@ -39,23 +39,15 @@ class _TelaLoginState extends State<TelaLogin> {
     _chaveForm.currentState!.save();
 
     try {
-      if (_emailInserido == 'admin') {
-        if (_modoLogin) {
-          //logar usuario
-          _logger.d(
-              'Usuário Logado. Email: $_emailInserido, Senha: $_senhaInserida');
-          _exibirPopup('Login bem-sucedido', 'Usuário logado com sucesso!');
-        } else {
-          //criar usuario
-          _logger.d(
-              'Usuário Criado. Email: $_emailInserido, Senha: $_senhaInserida, Nome de Usuário: $_nomeUsuarioInserido');
-        }
+      if (_emailInserido == 'admin' && _senhaInserida == 'admin') {
+        //logar usuario
+        _logger.d(
+            'Usuário Logado. Email: $_emailInserido, Senha: $_senhaInserida');
+        _exibirPopup('Login bem-sucedido', 'Usuário logado com sucesso!');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Credenciais inválidas.'),
-          ),
-        );
+        _logger.d(
+            'Usuário Logado. Email: $_emailInserido, Senha: $_senhaInserida');
+        _exibirPopup('Dados invalidos', 'Dados invalidos!');
       }
     } catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -161,7 +153,7 @@ class _TelaLoginState extends State<TelaLogin> {
                           ),
                           obscureText: true,
                           validator: (value) {
-                            if (value == null) {
+                            if (value == null && value == 'admin') {
                               return 'A senha deve ter pelo menos 6 caracteres.';
                             }
                             return null;
