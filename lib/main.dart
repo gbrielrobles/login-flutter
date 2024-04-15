@@ -103,18 +103,18 @@ class _TelaLoginState extends State<TelaLogin> {
                       Container(
                         margin: const EdgeInsets.only(
                           top: 1,
-                          bottom: 80,
+                          bottom: 100,
                           left: 20,
                           right: 20,
                         ),
-                        width: 300,
+                        width: 350,
                         child: Image.asset('assets/unicv-logo-site.png'),
                       ),
                       SizedBox(
                         width: 250,
                         child: TextFormField(
                           decoration: InputDecoration(
-                            labelText: 'Endereço de Email',
+                            labelText: 'Usuário:',
                             border: const OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.all(Radius.circular(50.0)),
@@ -142,7 +142,7 @@ class _TelaLoginState extends State<TelaLogin> {
                         width: 250,
                         child: TextFormField(
                           decoration: InputDecoration(
-                            labelText: 'Senha',
+                            labelText: 'Senha:',
                             border: const OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.all(Radius.circular(50.0)),
@@ -170,7 +170,7 @@ class _TelaLoginState extends State<TelaLogin> {
                           backgroundColor:
                               MaterialStateProperty.all<Color>(Colors.green),
                         ),
-                        child: Text(_modoLogin ? 'Entrar' : 'Cadastrar'),
+                        child: Text(_modoLogin ? 'Entrar'),
                       ),
                     ],
                   ),
