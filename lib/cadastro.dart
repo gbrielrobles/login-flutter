@@ -65,7 +65,8 @@ class Cadastro extends StatelessWidget {
                       ),
                       ElevatedButton.icon(
                         onPressed: () {
-                          _CadastroFormState? formState = CadastroForm.of(context);
+                          _CadastroFormState? formState =
+                              CadastroForm.of(context);
                           if (formState != null && formState.validate()) {
                             formState.save();
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -97,7 +98,8 @@ class Cadastro extends StatelessWidget {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(50),
                           ),
-                          backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
+                          backgroundColor:
+                              const Color.fromRGBO(239, 153, 45, 1),
                         ),
                       ),
                     ],
@@ -253,9 +255,7 @@ class _CadastroFormState extends State<CadastroForm> {
             'Você é?',
             textAlign: TextAlign.center,
             style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white),
+                fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
           ),
           const SizedBox(height: 12),
           Row(
