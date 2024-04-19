@@ -19,5 +19,7 @@ Este trabalho deverá ser feito em grupo de até quatro pessoas, em que os integ
 >>>>>>> 8b637ae60481d606369d3b60dae1f5c5c4153e17
 
 Jardy Rover Giovan Melo Bonfim (RA: 80708-2021)
+
 Wanderson Gabriel Sampaio Navarro (RA: 80566-2021)
+
 Gabriel Rocha Robles (RA: 80953-2021)
