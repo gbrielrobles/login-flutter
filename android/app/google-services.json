@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "722908583435",
+    "project_id": "unicvtrab",
+    "storage_bucket": "unicvtrab.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:722908583435:android:45d77119d6953d251f590e",
+        "android_client_info": {
+          "package_name": "com.example.tela_login"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDwVbM-oW32q_W86zZ8LQh9Vr0REhYncJw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
