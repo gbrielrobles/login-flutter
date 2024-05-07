@@ -1,4 +1,13 @@
-2024/04/15-20:16:52.855 14c8 Reusing MANIFEST C:\Users\Rocha\AppData\Local\Temp\flutter_tools.87486021\flutter_tools_chrome_device.8fd45b5b\Default\Site Characteristics Database/MANIFEST-000001
-2024/04/15-20:16:52.855 14c8 Recovering log #6
-2024/04/15-20:16:52.856 14c8 Reusing old log C:\Users\Rocha\AppData\Local\Temp\flutter_tools.87486021\flutter_tools_chrome_device.8fd45b5b\Default\Site Characteristics Database/000006.log 
-2024/04/15-20:16:52.856 14c8 Delete type=0 #3
+2024/05/05-16:44:21.598 1860 Reusing MANIFEST C:\Users\WANDER~1\AppData\Local\Temp\flutter_tools.e2d572fe\flutter_tools_chrome_device.fc6859cb\Default\Site Characteristics Database/MANIFEST-000001
+2024/05/05-16:44:21.601 1860 Recovering log #3
+2024/05/05-16:44:21.601 1860 Level-0 table #13: started
+2024/05/05-16:44:21.606 1860 Level-0 table #13: 191 bytes OK
+2024/05/05-16:44:21.606 1860 Recovering log #6
+2024/05/05-16:44:21.606 1860 Level-0 table #14: started
+2024/05/05-16:44:21.608 1860 Level-0 table #14: 434 bytes OK
+2024/05/05-16:44:21.608 1860 Recovering log #10
+2024/05/05-16:44:21.609 1860 Reusing old log C:\Users\WANDER~1\AppData\Local\Temp\flutter_tools.e2d572fe\flutter_tools_chrome_device.fc6859cb\Default\Site Characteristics Database/000010.log 
+2024/05/05-16:44:21.611 1860 Delete type=0 #3
+2024/05/05-16:44:21.611 1860 Delete type=2 #4
+2024/05/05-16:44:21.611 1860 Delete type=2 #6
+2024/05/05-16:44:21.611 1860 Delete type=0 #6

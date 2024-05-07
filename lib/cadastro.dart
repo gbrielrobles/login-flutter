@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:logger/logger.dart';
 
 void main() {
@@ -14,21 +15,20 @@ class Cadastro extends StatelessWidget {
       home: Scaffold(
         appBar: AppBar(
           backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
-          flexibleSpace: Center(
-            // Centralizar a imagem
-            child: Image.asset(
-              'assets/unicv-logo-site.png',
-              height: 90, // Aumentar altura da imagem
-              width: 90, // Aumentar largura da imagem
+          flexibleSpace: const Center(
+            child: Image(
+              image: AssetImage(
+                'assets/unicv-logo-site.png',
+              ),
+              height: 90,
+              width: 90,
             ),
           ),
         ),
-        backgroundColor:
-            const Color.fromRGBO(58, 92, 51, 1), // Define o fundo verde
+        backgroundColor: const Color.fromRGBO(58, 92, 51, 1),
         body: Container(
-          height: double.infinity, // Define a altura como infinita
-          color: const Color.fromRGBO(
-              58, 92, 51, 1), // Define o fundo verde para a tela inteira
+          height: double.infinity,
+          color: const Color.fromRGBO(58, 92, 51, 1),
           child: Column(
             children: [
               Expanded(
@@ -50,13 +50,11 @@ class Cadastro extends StatelessWidget {
                         onPressed: () {
                           Navigator.pop(context);
                         },
-                        icon: Icon(Icons.arrow_back),
-                        label: Text('Cancelar',
-                            style: TextStyle(
-                                color: Colors
-                                    .white)), // Define o texto como branco
+                        icon: const Icon(Icons.arrow_back),
+                        label: const Text('Cancelar',
+                            style: TextStyle(color: Colors.white)),
                         style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
+                          shape: const RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(50),
                           ),
                           backgroundColor:
@@ -64,22 +62,38 @@ class Cadastro extends StatelessWidget {
                         ),
                       ),
                       ElevatedButton.icon(
-                        onPressed: () {
-                          _CadastroFormState? formState =
-                              CadastroForm.of(context);
+                        onPressed: () async {
+                          final formState = CadastroForm.of(context);
                           if (formState != null && formState.validate()) {
                             formState.save();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Cadastro realizado com sucesso!',
-                                  style: TextStyle(color: Colors.white),
+                            try {
+                              await FirebaseAuth.instance
+                                  .createUserWithEmailAndPassword(
+                                email: formState.email,
+                                password: formState.senha,
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Cadastro realizado com sucesso!',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
                                 ),
-                              ),
-                            );
+                              );
+                            } on FirebaseAuthException catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    e.message ?? 'Erro ao cadastrar usuário.',
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
+                              const SnackBar(
                                 content: Text(
                                   'Por favor, preencha todos os campos!',
                                   style: TextStyle(color: Colors.white),
@@ -89,13 +103,13 @@ class Cadastro extends StatelessWidget {
                             );
                           }
                         },
-                        icon: Icon(Icons.arrow_forward),
-                        label: Text(
+                        icon: const Icon(Icons.arrow_forward),
+                        label: const Text(
                           'Concluir',
                           style: TextStyle(color: Colors.white),
                         ),
                         style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
+                          shape: const RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(50),
                           ),
                           backgroundColor:
@@ -129,7 +143,6 @@ class _CadastroFormState extends State<CadastroForm> {
   final _chaveForm = GlobalKey<FormState>();
   var _nomeUsuario = '';
   var _senha = '';
-  var _ra = '';
   var _email = '';
   var _tipoUsuario;
 
@@ -138,26 +151,13 @@ class _CadastroFormState extends State<CadastroForm> {
   List<bool> _selections = List.generate(3, (_) => false);
 
   bool validate() {
-    _selections = [false, false, false];
-    if (_tipoUsuario == 'Estudante') {
-      _selections[0] = true;
-    } else if (_tipoUsuario == 'Professor') {
-      _selections[1] = true;
-    } else if (_tipoUsuario == 'Coordenador') {
-      _selections[2] = true;
-    }
-
     return _chaveForm.currentState!.validate();
   }
 
   void save() {
     _chaveForm.currentState!.save();
-    _logger.d(
-        'Nome de Usuário: $_nomeUsuario, Senha: $_senha, Email: $_email, Tipo de Usuário: $_tipoUsuario, R.A.: $_ra');
+    _logger.d('Nome de Usuário: $_nomeUsuario, Senha: $_senha, Email: $_email');
   }
-
-  final TextEditingController _confirmarSenhaController =
-      TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -208,27 +208,6 @@ class _CadastroFormState extends State<CadastroForm> {
           ),
           const SizedBox(height: 12),
           TextFormField(
-            controller: _confirmarSenhaController,
-            decoration: InputDecoration(
-              labelText: 'Confirme sua senha',
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(50.0),
-              ),
-            ),
-            obscureText: true,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Por favor, confirme sua senha.';
-              } else if (value != _senha) {
-                return 'As senhas não coincidem.';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
             decoration: InputDecoration(
               labelText: 'E-mail',
               filled: true,
@@ -251,89 +230,8 @@ class _CadastroFormState extends State<CadastroForm> {
             },
           ),
           const SizedBox(height: 12),
-          Text(
-            'Você é?',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-                fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _tipoUsuario = 'Estudante';
-                  });
-                },
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                  backgroundColor: _selections[0] ? Colors.green : Colors.white,
-                ),
-                child: Text('Estudante'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _tipoUsuario = 'Professor';
-                  });
-                },
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                  backgroundColor: _selections[1] ? Colors.green : Colors.white,
-                ),
-                child: Text('Professor'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _tipoUsuario = 'Coordenador';
-                  });
-                },
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                  backgroundColor: _selections[2] ? Colors.green : Colors.white,
-                ),
-                child: Text('Coordenador'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            decoration: InputDecoration(
-              labelText: 'R.A Institucional',
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(50.0),
-              ),
-            ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Por favor, insira um R.A válido.';
-              }
-              return null;
-            },
-            onSaved: (value) {
-              _ra = value!;
-            },
-          ),
-          const SizedBox(height: 12),
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _confirmarSenhaController.dispose();
-    super.dispose();
   }
 }
