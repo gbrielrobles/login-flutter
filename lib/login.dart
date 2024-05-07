@@ -36,7 +36,7 @@ class _TelaLoginState extends State<TelaLogin> {
         password: _senhaInserida,
       );
       // Se chegou até aqui, o login foi bem-sucedido TESTE CONFLITO
-      _exibirPopup('Login bem-sucedido', 'Usuário logado com sucesso!');
+      _exibirPopup('Login bem-sucedido', 'Usuário logado com sucesso!');;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         print('No user found for that email.');
