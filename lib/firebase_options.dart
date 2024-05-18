@@ -85,5 +85,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'unicvtrab.appspot.com',
     measurementId: 'G-3JLBE9Z7LP',
   );
-
 }

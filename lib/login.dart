@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'cadastro.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TelaLogin extends StatefulWidget {
   const TelaLogin({Key? key}) : super(key: key);
@@ -10,16 +11,22 @@ class TelaLogin extends StatefulWidget {
 }
 
 class _TelaLoginState extends State<TelaLogin> {
+  // Chave global para identificar o formulário
   final _chaveForm = GlobalKey<FormState>();
+  // Variáveis para armazenar os dados inseridos pelo usuário
   var _emailInserido = '';
   var _senhaInserida = '';
+  // Variável para indicar se houve erro de validação
   bool _erroValidacao = false;
 
+  // Função para enviar os dados do formulário para autenticação
   void _enviar() async {
+    // Resetar o estado de erro de validação
     setState(() {
       _erroValidacao = false;
     });
 
+    // Validar o formulário, se inválido, marcar erro de validação e retornar
     if (!_chaveForm.currentState!.validate()) {
       setState(() {
         _erroValidacao = true;
@@ -27,33 +34,48 @@ class _TelaLoginState extends State<TelaLogin> {
       return;
     }
 
+    // Salvar os dados do formulário
     _chaveForm.currentState!.save();
 
     try {
+      // Tentar fazer login com Firebase Authentication
       UserCredential userCredential =
           await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailInserido,
         password: _senhaInserida,
       );
-<<<<<<< HEAD
-      ;
-      // Se chegou até aqui, o login foi bem-sucedido Teste
-=======
-      // Se chegou até aqui, o login foi bem-sucedido TESTE CONFLITO
-      _exibirPopup('Login bem-sucedido', 'Usuário logado com sucesso!');;
->>>>>>> 5a17bec50f71b4a73d3890ab3319f87c7773868a
+
+      // Verificar se o email do usuário está verificado
+      if (userCredential.user!.emailVerified) {
+        // Exibir popup de sucesso
+        _exibirPopup('Login bem-sucedido', 'Usuário logado com sucesso!');
+
+        // Obter os dados do usuário do Firestore
+        DocumentSnapshot<Map<String, dynamic>> userData =
+            await FirebaseFirestore.instance
+                .collection('usuarios')
+                .doc(userCredential.user!.uid)
+                .get();
+      } else {
+        // Exibir popup pedindo para verificar o email
+        _exibirPopup('Erro de autenticação',
+            'Por favor, verifique seu email antes de fazer login.');
+      }
     } on FirebaseAuthException catch (e) {
+      // Tratamento de erros específicos do FirebaseAuth
       if (e.code == 'user-not-found') {
         print('No user found for that email.');
       } else if (e.code == 'wrong-password') {
         print('Wrong password provided for that user.');
       }
+      // Marcar erro de validação
       setState(() {
         _erroValidacao = true;
       });
     }
   }
 
+  // Função para exibir um popup com uma mensagem
   void _exibirPopup(String titulo, String mensagem) {
     showDialog(
       context: context,
@@ -74,6 +96,7 @@ class _TelaLoginState extends State<TelaLogin> {
     );
   }
 
+  // Função para navegar para a tela de cadastro
   void _irParaCadastro(BuildContext context) {
     Navigator.of(context)
         .push(MaterialPageRoute(builder: (context) => Cadastro()));
@@ -85,6 +108,7 @@ class _TelaLoginState extends State<TelaLogin> {
       appBar: AppBar(
         backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
       ),
+      // Cor de fundo da tela
       backgroundColor: Color.fromRGBO(230, 231, 232, 1),
       body: SingleChildScrollView(
         child: Padding(
@@ -102,6 +126,7 @@ class _TelaLoginState extends State<TelaLogin> {
                   width: 350,
                   child: Image.asset('assets/unicv-logo-site.png'),
                 ),
+                // Campo de texto para inserir o usuário (email)
                 TextFormField(
                   decoration: InputDecoration(
                     labelText: 'Usuário:',
@@ -144,6 +169,7 @@ class _TelaLoginState extends State<TelaLogin> {
                   },
                 ),
                 const SizedBox(height: 12),
+                // Link para recuperação de senha
                 GestureDetector(
                   onTap: () {
                     print('Esqueceu a senha?');
@@ -157,6 +183,7 @@ class _TelaLoginState extends State<TelaLogin> {
                   ),
                 ),
                 const SizedBox(height: 20),
+                // Botão de login
                 ElevatedButton(
                   onPressed: _enviar,
                   style: ButtonStyle(

@@ -1,0 +1,26 @@
+2024/05/14-22:00:44.210 1dc4 Creating DB C:\Users\WANDER~1\AppData\Local\Temp\flutter_tools.a1649c83\flutter_tools_chrome_device.8efdcd42\Default\IndexedDB\http_localhost_49501.indexeddb.leveldb since it was missing.
+2024/05/14-22:00:44.215 1dc4 Reusing MANIFEST C:\Users\WANDER~1\AppData\Local\Temp\flutter_tools.a1649c83\flutter_tools_chrome_device.8efdcd42\Default\IndexedDB\http_localhost_49501.indexeddb.leveldb/MANIFEST-000001
+2024/05/14-22:00:44.223 3580 Level-0 table #5: started
+2024/05/14-22:00:44.225 3580 Level-0 table #5: 1308 bytes OK
+2024/05/14-22:00:44.226 3580 Delete type=0 #3
+2024/05/14-22:00:44.226 1dc4 Manual compaction at level-0 from '\x00\x01\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x02\x00\x00\x00' @ 0 : 0; will stop at (end)
+2024/05/14-22:06:37.438 4ac0 Level-0 table #7: started
+2024/05/14-22:06:37.440 4ac0 Level-0 table #7: 2099 bytes OK
+2024/05/14-22:06:37.442 4ac0 Delete type=0 #4
+2024/05/14-22:06:37.442 4ac0 Manual compaction at level-0 from '\x00\x04\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x05\x00\x00\x00' @ 0 : 0; will stop at (end)
+2024/05/14-22:07:42.250 1dc4 Compacting 1@1 + 1@2 files
+2024/05/14-22:07:42.252 1dc4 Generated table #8@1: 39 keys, 1185 bytes
+2024/05/14-22:07:42.252 1dc4 Compacted 1@1 + 1@2 files => 1185 bytes
+2024/05/14-22:07:42.273 1dc4 compacted to: files[ 0 0 1 0 0 0 0 ]
+2024/05/14-22:07:42.273 1dc4 Delete type=2 #5
+2024/05/14-22:07:42.273 1dc4 Delete type=2 #7
+2024/05/14-22:13:06.584 3580 Level-0 table #10: started
+2024/05/14-22:13:06.586 3580 Level-0 table #10: 9319 bytes OK
+2024/05/14-22:13:06.587 3580 Delete type=0 #6
+2024/05/14-22:13:06.588 1dc4 Manual compaction at level-0 from '\x00\x05\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x06\x00\x00\x00' @ 0 : 0; will stop at (end)
+2024/05/14-22:13:45.788 4ac0 Compacting 1@1 + 1@2 files
+2024/05/14-22:13:45.790 4ac0 Generated table #11@1: 41 keys, 3017 bytes
+2024/05/14-22:13:45.790 4ac0 Compacted 1@1 + 1@2 files => 3017 bytes
+2024/05/14-22:13:45.791 4ac0 compacted to: files[ 0 0 1 0 0 0 0 ]
+2024/05/14-22:13:45.791 4ac0 Delete type=2 #8
+2024/05/14-22:13:45.791 4ac0 Delete type=2 #10
