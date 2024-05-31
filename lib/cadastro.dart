@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:logger/logger.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'login.dart';
 
 void main() {
   runApp(const Cadastro());
@@ -12,225 +13,242 @@ class Cadastro extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
-          flexibleSpace: const Center(
-            child: Image(
-              image: AssetImage(
-                'assets/unicv-logo-site.png',
-              ),
-              height: 90,
-              width: 90,
+      home: CadastroScreen(),
+    );
+  }
+}
+
+class CadastroScreen extends StatefulWidget {
+  const CadastroScreen({Key? key}) : super(key: key);
+
+  @override
+  _CadastroScreenState createState() => _CadastroScreenState();
+}
+
+class _CadastroScreenState extends State<CadastroScreen> {
+  // Chave global para o formulário (é usada para salvar os dados)
+  final _chaveForm = GlobalKey<FormState>();
+  var _nomeUsuario = '';
+  var _senha = '';
+  var _cpf = '';
+  var _email = '';
+  var _tipoUsuario = 'Estudante';
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Image.asset(
+              'assets/unicv-logo-site.png',
+              height: 40,
+              width: 40,
             ),
-          ),
+          ],
         ),
-        backgroundColor: const Color.fromRGBO(58, 92, 51, 1),
-        body: Container(
-          height: double.infinity,
-          color: const Color.fromRGBO(58, 92, 51, 1),
-          child: Column(
+      ),
+      body: Container(
+        height: double.infinity,
+        color: const Color.fromRGBO(58, 92, 51, 1),
+        padding: EdgeInsets.all(20),
+        child: Form(
+          key: _chaveForm,
+          child: ListView(
             children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Container(
-                    padding: const EdgeInsets.all(20.0),
-                    child: CadastroForm(),
+              DropdownButtonFormField<String>(
+                value: _tipoUsuario,
+                onChanged: (newValue) {
+                  // Atualiza o tipo de usuário selecionado
+                  setState(() {
+                    _tipoUsuario = newValue!;
+                  });
+                },
+                items: <String>['Estudante', 'Professor']
+                    .map<DropdownMenuItem<String>>((String value) {
+                  // Exibe as opções para o usuário
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: TextFormField(
+                  decoration: InputDecoration(
+                    labelText: 'Nome de Usuário',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Por favor, insira um nome de usuário válido.';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) {
+                    // Salva o nome de usuário
+                    _nomeUsuario = value!;
+                  },
                 ),
               ),
+              const SizedBox(height: 12),
               Container(
-                color: const Color.fromRGBO(239, 153, 45, 1),
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        icon: const Icon(Icons.arrow_back),
-                        label: const Text('Cancelar',
-                            style: TextStyle(color: Colors.white)),
-                        style: ElevatedButton.styleFrom(
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(50),
-                          ),
-                          backgroundColor:
-                              const Color.fromRGBO(239, 153, 45, 1),
-                        ),
-                      ),
-                      ElevatedButton.icon(
-                        onPressed: () async {
-                          final formState = CadastroForm.of(context);
-                          if (formState != null && formState.validate()) {
-                            formState.save();
-                            try {
-                              await FirebaseAuth.instance
-                                  .createUserWithEmailAndPassword(
-                                email: formState.email,
-                                password: formState.senha,
-                              );
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Cadastro realizado com sucesso!',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                ),
-                              );
-                            } on FirebaseAuthException catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    e.message ?? 'Erro ao cadastrar usuário.',
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Por favor, preencha todos os campos!',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        },
-                        icon: const Icon(Icons.arrow_forward),
-                        label: const Text(
-                          'Concluir',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(50),
-                          ),
-                          backgroundColor:
-                              const Color.fromRGBO(239, 153, 45, 1),
-                        ),
-                      ),
-                    ],
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: TextFormField(
+                  decoration: InputDecoration(
+                    labelText: 'Senha',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
+                  // Oculta o campo de senha
+                  obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Por favor, insira uma senha válida.';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) {
+                    // Salva a senha
+                    _senha = value!;
+                  },
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: TextFormField(
+                  decoration: InputDecoration(
+                    labelText: 'Cpf Institucional',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Por favor, insira um Cpf válido.';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) {
+                    // Salva o R.A institucional
+                    _cpf = value!;
+                  },
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: TextFormField(
+                  decoration: InputDecoration(
+                    labelText: 'E-mail',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null ||
+                        value.trim().isEmpty ||
+                        !value.contains('@')) {
+                      return 'Por favor, insira um endereço de email válido.';
+                    } else if (_tipoUsuario == 'Estudante' &&
+                        !value.endsWith('@aluno.unicv.edu.br')) {
+                      return 'Insira um email de aluno válido.';
+                    } else if (_tipoUsuario == 'Professor' &&
+                        !value.endsWith('@unicv.edu.br')) {
+                      return 'Insira um email de professor válido.';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) {
+                    // Salva o email
+                    _email = value!;
+                  },
+                ),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () async {
+                  // Valida o formulário e salva os dados
+                  if (_chaveForm.currentState!.validate()) {
+                    _chaveForm.currentState!.save();
+                    try {
+                      // Cria o usuário no Firebase Authentication
+                      await FirebaseAuth.instance
+                          .createUserWithEmailAndPassword(
+                        email: _email,
+                        password: _senha,
+                      );
+
+                      // Adiciona as informações do usuário ao Firestore Database
+                      await FirebaseFirestore.instance
+                          .collection('usuarios')
+                          .doc(FirebaseAuth.instance.currentUser!.uid)
+                          .set({
+                        'nomeUsuario': _nomeUsuario,
+                        'senha': _senha,
+                        'Cpf': _cpf,
+                        'email': _email,
+                        'tipoUsuario': _tipoUsuario,
+                      });
+
+                      // Envia o e-mail de verificação
+                      User? user = FirebaseAuth.instance.currentUser;
+                      await user!.sendEmailVerification();
+
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(
+                            'Verifique seu email para confirmar o cadastro'),
+                      ));
+                      Navigator.pushReplacement(
+                          context,
+                          // Volta para a tela de login em caso de erro
+                          MaterialPageRoute(builder: (context) => TelaLogin()));
+                    } on FirebaseAuthException catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('Erro ao criar usuário: ${e.message}'),
+                      ));
+                    }
+                  }
+                },
+                child: Text('Prosseguir'),
+              ),
+              SizedBox(height: 10),
+              // Volta para a tela de login
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => TelaLogin()),
+                  );
+                },
+                child: Text(
+                  'Cancelar',
                 ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class CadastroForm extends StatefulWidget {
-  const CadastroForm({Key? key}) : super(key: key);
-
-  @override
-  _CadastroFormState createState() => _CadastroFormState();
-
-  static _CadastroFormState? of(BuildContext context) {
-    return context.findAncestorStateOfType<_CadastroFormState>();
-  }
-}
-
-class _CadastroFormState extends State<CadastroForm> {
-  final _chaveForm = GlobalKey<FormState>();
-  var _nomeUsuario = '';
-  var _senha = '';
-  var _email = '';
-  var _tipoUsuario;
-
-  final Logger _logger = Logger();
-
-  List<bool> _selections = List.generate(3, (_) => false);
-
-  bool validate() {
-    return _chaveForm.currentState!.validate();
-  }
-
-  void save() {
-    _chaveForm.currentState!.save();
-    _logger.d('Nome de Usuário: $_nomeUsuario, Senha: $_senha, Email: $_email');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Form(
-      key: _chaveForm,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TextFormField(
-            decoration: InputDecoration(
-              labelText: 'Nome de Usuário',
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(50.0),
-              ),
-            ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Por favor, insira um nome de usuário válido.';
-              }
-              return null;
-            },
-            onSaved: (value) {
-              _nomeUsuario = value!;
-            },
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            decoration: InputDecoration(
-              labelText: 'Senha',
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(50.0),
-              ),
-            ),
-            obscureText: true,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Por favor, insira uma senha válida.';
-              }
-              return null;
-            },
-            onSaved: (value) {
-              _senha = value!;
-            },
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            decoration: InputDecoration(
-              labelText: 'E-mail',
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(50.0),
-              ),
-            ),
-            keyboardType: TextInputType.emailAddress,
-            validator: (value) {
-              if (value == null ||
-                  value.trim().isEmpty ||
-                  !value.contains('@')) {
-                return 'Por favor, insira um endereço de email válido.';
-              }
-              return null;
-            },
-            onSaved: (value) {
-              _email = value!;
-            },
-          ),
-          const SizedBox(height: 12),
-        ],
       ),
     );
   }
