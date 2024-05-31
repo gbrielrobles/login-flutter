@@ -147,7 +147,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                     return null;
                   },
                   onSaved: (value) {
-                    // Salva o R.A institucional
+                    // Salva o CPF institucional
                     _cpf = value!;
                   },
                 ),
