@@ -30,7 +30,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
   final _chaveForm = GlobalKey<FormState>();
   var _nomeUsuario = '';
   var _senha = '';
-  var _ra = '';
+  var _cpf = '';
   var _email = '';
   var _tipoUsuario = 'Estudante';
 
@@ -135,20 +135,20 @@ class _CadastroScreenState extends State<CadastroScreen> {
                 ),
                 child: TextFormField(
                   decoration: InputDecoration(
-                    labelText: 'R.A Institucional',
+                    labelText: 'CPF:',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Por favor, insira um R.A válido.';
+                      return 'Por favor, insira um CPF válido.';
                     }
                     return null;
                   },
                   onSaved: (value) {
                     // Salva o R.A institucional
-                    _ra = value!;
+                    _cpf = value!;
                   },
                 ),
               ),
@@ -207,7 +207,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                           .set({
                         'nomeUsuario': _nomeUsuario,
                         'senha': _senha,
-                        'ra': _ra,
+                        'cpf': _cpf,
                         'email': _email,
                         'tipoUsuario': _tipoUsuario,
                       });

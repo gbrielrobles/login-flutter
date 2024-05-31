@@ -129,7 +129,7 @@ class _TelaLoginState extends State<TelaLogin> {
                 // Campo de texto para inserir o usuário (email)
                 TextFormField(
                   decoration: InputDecoration(
-                    labelText: 'Usuário:',
+                    labelText: 'E-mail:',
                     border: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(50.0)),
                     ),
