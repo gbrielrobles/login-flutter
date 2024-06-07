@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'selecionar_semestre.dart'; // Importar a tela de seleção de semestre
+import 'selecionar_semestre.dart';
 
 class SelecionarCursoScreen extends StatelessWidget {
   @override

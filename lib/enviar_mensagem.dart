@@ -14,6 +14,8 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
   String? _cursoSelecionado;
   String? _semestreSelecionado;
   List<String> _materiasSelecionadas = [];
+  DateTime? _dataSelecionada;
+  TimeOfDay? _horaSelecionada;
 
   List<String> cursos = [];
   List<String> semestres = [];
@@ -62,6 +64,16 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
+      if (_cursoSelecionado == null ||
+          _semestreSelecionado == null ||
+          _materiasSelecionadas.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              'Por favor, selecione o curso, semestre e pelo menos uma matéria.'),
+        ));
+        return;
+      }
+
       var user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         try {
@@ -72,7 +84,17 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
             'curso': _cursoSelecionado ?? 'Não especificado',
             'semestre': _semestreSelecionado ?? 'Não especificado',
             'materias': _materiasSelecionadas,
-            'data': Timestamp.now(),
+            'data': _dataSelecionada != null
+                ? Timestamp.fromDate(
+                    DateTime(
+                      _dataSelecionada!.year,
+                      _dataSelecionada!.month,
+                      _dataSelecionada!.day,
+                      _horaSelecionada?.hour ?? 0,
+                      _horaSelecionada?.minute ?? 0,
+                    ),
+                  )
+                : Timestamp.now(),
           };
 
           await FirebaseFirestore.instance.collection('mensagens').add(data);
@@ -91,6 +113,30 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
         ));
       }
     }
+  }
+
+  Future<void> _selecionarData(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _dataSelecionada ?? DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null && picked != _dataSelecionada)
+      setState(() {
+        _dataSelecionada = picked;
+      });
+  }
+
+  Future<void> _selecionarHora(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _horaSelecionada ?? TimeOfDay.now(),
+    );
+    if (picked != null && picked != _horaSelecionada)
+      setState(() {
+        _horaSelecionada = picked;
+      });
   }
 
   @override
@@ -149,6 +195,12 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
                   });
                 },
                 value: _cursoSelecionado,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor, selecione um curso';
+                  }
+                  return null;
+                },
               ),
               DropdownButtonFormField<String>(
                 decoration: InputDecoration(labelText: 'Semestre'),
@@ -166,6 +218,12 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
                   });
                 },
                 value: _semestreSelecionado,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor, selecione um semestre';
+                  }
+                  return null;
+                },
               ),
               Expanded(
                 child: ListView.builder(
@@ -187,13 +245,35 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
                   },
                 ),
               ),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => _selecionarData(context),
+                      child: Text(_dataSelecionada == null
+                          ? 'Selecionar Data'
+                          : 'Data: ${_dataSelecionada!.day}/${_dataSelecionada!.month}/${_dataSelecionada!.year}'),
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => _selecionarHora(context),
+                      child: Text(_horaSelecionada == null
+                          ? 'Selecionar Hora'
+                          : 'Hora: ${_horaSelecionada!.format(context)}'),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _enviarMensagem,
-                child: Text('Enviar'),
+                child: Text('Enviar', style: TextStyle(color: Colors.white)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.secondary,
+                  backgroundColor: Colors.green,
                 ),
-              )
+              ),
             ],
           ),
         ),

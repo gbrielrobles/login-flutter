@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'home.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SelecionarMateriaScreen extends StatefulWidget {
   final String cursoId;
@@ -63,12 +63,6 @@ class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           var user = FirebaseAuth.instance.currentUser;
-          if (user == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Erro: Usuário não está autenticado.')));
-            return;
-          }
-
           var cursoSemestreMateria = {
             'curso': widget.cursoId,
             'semestre': widget.semestre,
@@ -77,50 +71,47 @@ class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
                 .toList(),
           };
 
-          try {
-            var userDoc = await FirebaseFirestore.instance
-                .collection('usuarios')
-                .doc(user.uid)
-                .get();
+          // Obtém o documento do usuário
+          var userDoc = await FirebaseFirestore.instance
+              .collection('usuarios')
+              .doc(user!.uid)
+              .get();
 
-            var userData = userDoc.data();
-            if (userData == null) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text(
-                      'Erro: Não foi possível obter os dados do usuário.')));
-              return;
-            }
+          // Obtém a lista de cursoSemestreMateria
+          var userData = userDoc.data() as Map<String, dynamic>;
+          var cursoSemestreMateriaArray =
+              userData['cursoSemestreMateria'] as List<dynamic> ?? [];
 
-            List<dynamic> cursoSemestreMateriaArray =
-                userData['cursoSemestreMateria'] as List<dynamic>? ?? [];
+          // Encontra o índice do item correspondente ao curso e semestre, se existir
+          int index = cursoSemestreMateriaArray.indexWhere((item) =>
+              item['curso'] == widget.cursoId &&
+              item['semestre'] == widget.semestre);
 
-            int index = cursoSemestreMateriaArray.indexWhere((item) =>
-                item['curso'] == widget.cursoId &&
-                item['semestre'] == widget.semestre);
+          if (index >= 0) {
+            // Se o item já existir, atualiza-o
+            cursoSemestreMateriaArray[index] = cursoSemestreMateria;
+          } else {
+            // Se o item não existir, adiciona-o
+            cursoSemestreMateriaArray.add(cursoSemestreMateria);
+          }
 
-            if (index >= 0) {
-              cursoSemestreMateriaArray[index] = cursoSemestreMateria;
-            } else {
-              cursoSemestreMateriaArray.add(cursoSemestreMateria);
-            }
-
-            await FirebaseFirestore.instance
-                .collection('usuarios')
-                .doc(user.uid)
-                .update({
-              'cursoSemestreMateria': cursoSemestreMateriaArray,
-            });
-
+          // Atualiza o documento do usuário
+          FirebaseFirestore.instance
+              .collection('usuarios')
+              .doc(user.uid)
+              .update({
+            'cursoSemestreMateria': cursoSemestreMateriaArray,
+          }).then((value) {
             ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('Matérias selecionadas com sucesso!')));
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => HomeScreen()),
             );
-          } catch (e) {
+          }).catchError((error) {
             ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Erro ao selecionar matérias: $e')));
-          }
+                SnackBar(content: Text('Erro ao selecionar matérias: $error')));
+          });
         },
         child: Icon(Icons.save),
       ),
