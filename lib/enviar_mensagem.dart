@@ -3,6 +3,24 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class EnviarMensagemScreen extends StatefulWidget {
+  final String? mensagemId;
+  final String? titulo;
+  final String? mensagem;
+  final String? curso;
+  final String? semestre;
+  final List<String>? materias;
+  final DateTime? data;
+
+  EnviarMensagemScreen({
+    this.mensagemId,
+    this.titulo,
+    this.mensagem,
+    this.curso,
+    this.semestre,
+    this.materias,
+    this.data,
+  });
+
   @override
   _EnviarMensagemScreenState createState() => _EnviarMensagemScreenState();
 }
@@ -25,6 +43,15 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
   void initState() {
     super.initState();
     _fetchCursos();
+    if (widget.titulo != null) {
+      _titulo = widget.titulo!;
+      _mensagem = widget.mensagem!;
+      _cursoSelecionado = widget.curso;
+      _semestreSelecionado = widget.semestre;
+      _materiasSelecionadas = widget.materias ?? [];
+      _dataSelecionada = widget.data;
+      _horaSelecionada = TimeOfDay.fromDateTime(widget.data!);
+    }
   }
 
   void _fetchCursos() async {
@@ -97,11 +124,22 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
                 : Timestamp.now(),
           };
 
-          await FirebaseFirestore.instance.collection('mensagens').add(data);
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Mensagem enviada com sucesso!'),
-          ));
-          Navigator.pop(context);
+          if (widget.mensagemId == null) {
+            await FirebaseFirestore.instance.collection('mensagens').add(data);
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Mensagem enviada com sucesso!'),
+            ));
+          } else {
+            await FirebaseFirestore.instance
+                .collection('mensagens')
+                .doc(widget.mensagemId)
+                .update(data);
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Mensagem atualizada com sucesso!'),
+            ));
+          }
+
+          Navigator.pop(context, true); // Indica que uma atualização ocorreu
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('Erro ao enviar mensagem: $e'),
@@ -143,7 +181,8 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Enviar Mensagem'),
+        title: Text(
+            widget.mensagemId == null ? 'Enviar Mensagem' : 'Editar Mensagem'),
         backgroundColor: Color.fromRGBO(239, 153, 45, 1),
       ),
       body: Padding(
@@ -154,6 +193,7 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextFormField(
+                initialValue: _titulo,
                 decoration: InputDecoration(labelText: 'Título'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -166,6 +206,7 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
                 },
               ),
               TextFormField(
+                initialValue: _mensagem,
                 decoration: InputDecoration(labelText: 'Mensagem'),
                 maxLines: 5,
                 validator: (value) {
@@ -269,7 +310,8 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _enviarMensagem,
-                child: Text('Enviar', style: TextStyle(color: Colors.white)),
+                child: Text(widget.mensagemId == null ? 'Enviar' : 'Atualizar',
+                    style: TextStyle(color: Colors.white)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                 ),

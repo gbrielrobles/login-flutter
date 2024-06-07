@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'home.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'home.dart';
 
 class SelecionarMateriaScreen extends StatefulWidget {
   final String cursoId;
@@ -17,12 +17,140 @@ class SelecionarMateriaScreen extends StatefulWidget {
 class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
   Map<String, bool> materiasSelecionadas = {};
 
+  String generateDocumentId(String input) {
+    return input.replaceAll(' ', '_').toLowerCase();
+  }
+
+  Future<void> _adicionarMateria(BuildContext context) async {
+    final TextEditingController _materiaController = TextEditingController();
+    final TextEditingController _descricaoController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Adicionar Matéria'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _materiaController,
+              decoration: InputDecoration(hintText: 'Nome da Matéria'),
+            ),
+            TextField(
+              controller: _descricaoController,
+              decoration: InputDecoration(hintText: 'Descrição da Matéria'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (_materiaController.text.isNotEmpty &&
+                  _descricaoController.text.isNotEmpty) {
+                String docId = generateDocumentId(_materiaController.text);
+                await FirebaseFirestore.instance
+                    .collection('cursos')
+                    .doc(widget.cursoId)
+                    .collection('semestres')
+                    .doc(widget.semestre)
+                    .collection('materias')
+                    .doc(docId)
+                    .set({
+                  'nome': _materiaController.text,
+                  'descricao': _descricaoController.text,
+                });
+                Navigator.pop(context);
+              }
+            },
+            child: Text('Salvar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _editarMateria(
+      BuildContext context, DocumentSnapshot materia) async {
+    final TextEditingController _materiaController =
+        TextEditingController(text: materia['nome']);
+    final TextEditingController _descricaoController =
+        TextEditingController(text: materia['descricao']);
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Editar Matéria'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _materiaController,
+              decoration: InputDecoration(hintText: 'Nome da Matéria'),
+            ),
+            TextField(
+              controller: _descricaoController,
+              decoration: InputDecoration(hintText: 'Descrição da Matéria'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (_materiaController.text.isNotEmpty &&
+                  _descricaoController.text.isNotEmpty) {
+                await FirebaseFirestore.instance
+                    .collection('cursos')
+                    .doc(widget.cursoId)
+                    .collection('semestres')
+                    .doc(widget.semestre)
+                    .collection('materias')
+                    .doc(materia.id)
+                    .update({
+                  'nome': _materiaController.text,
+                  'descricao': _descricaoController.text,
+                });
+                Navigator.pop(context);
+              }
+            },
+            child: Text('Salvar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _excluirMateria(
+      BuildContext context, DocumentSnapshot materia) async {
+    await FirebaseFirestore.instance
+        .collection('cursos')
+        .doc(widget.cursoId)
+        .collection('semestres')
+        .doc(widget.semestre)
+        .collection('materias')
+        .doc(materia.id)
+        .delete();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Selecione suas Matérias'),
         backgroundColor: Color.fromRGBO(239, 153, 45, 1),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.add),
+            onPressed: () => _adicionarMateria(context),
+          ),
+        ],
       ),
       backgroundColor: Color.fromRGBO(230, 231, 232, 1),
       body: StreamBuilder<QuerySnapshot>(
@@ -46,13 +174,27 @@ class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
           return ListView.builder(
             itemCount: materias.length,
             itemBuilder: (context, index) {
-              var materia = materias[index].data() as Map<String, dynamic>;
-              return CheckboxListTile(
+              var materia = materias[index];
+              return ListTile(
                 title: Text(materia['nome']),
-                value: materiasSelecionadas[materia['nome']] ?? false,
-                onChanged: (bool? value) {
+                subtitle: Text(materia['descricao']),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.edit),
+                      onPressed: () => _editarMateria(context, materia),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete),
+                      onPressed: () => _excluirMateria(context, materia),
+                    ),
+                  ],
+                ),
+                onTap: () {
                   setState(() {
-                    materiasSelecionadas[materia['nome']] = value!;
+                    materiasSelecionadas[materia['nome']] =
+                        !materiasSelecionadas[materia['nome']]!;
                   });
                 },
               );

@@ -4,7 +4,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'enviar_mensagem.dart'; // Importe a tela de envio de mensagem
 import 'selecionar_curso.dart'; // Importe a tela de seleção de curso
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   Future<List<Map<String, dynamic>>> _fetchMensagens() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -25,7 +30,7 @@ class HomeScreen extends StatelessWidget {
             .where('materias', arrayContainsAny: item['materias'])
             .get();
         mensagens.addAll(mensagensSnapshot.docs
-            .map((doc) => doc.data() as Map<String, dynamic>)
+            .map((doc) => {'id': doc.id, ...doc.data() as Map<String, dynamic>})
             .toList());
       }
       return mensagens;
@@ -68,6 +73,24 @@ class HomeScreen extends StatelessWidget {
                 title: Text(mensagem['titulo']),
                 subtitle: Text(mensagem['mensagem']),
                 trailing: Text(mensagem['data'].toDate().toString()),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EnviarMensagemScreen(
+                        mensagemId: mensagem['id'],
+                        titulo: mensagem['titulo'],
+                        mensagem: mensagem['mensagem'],
+                        curso: mensagem['curso'],
+                        semestre: mensagem['semestre'],
+                        materias: List<String>.from(mensagem['materias']),
+                        data: mensagem['data'].toDate(),
+                      ),
+                    ),
+                  ).then((_) {
+                    setState(() {});
+                  });
+                },
               );
             },
           );
@@ -78,7 +101,9 @@ class HomeScreen extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => EnviarMensagemScreen()),
-          );
+          ).then((_) {
+            setState(() {});
+          });
         },
         child: Icon(Icons.add),
         backgroundColor: Color.fromRGBO(239, 153, 45, 1),

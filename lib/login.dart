@@ -101,6 +101,60 @@ class _TelaLoginState extends State<TelaLogin> {
         .push(MaterialPageRoute(builder: (context) => Cadastro()));
   }
 
+  Future<void> _recuperarSenha() async {
+    final TextEditingController _emailController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Recuperar Senha'),
+        content: TextField(
+          controller: _emailController,
+          decoration: InputDecoration(hintText: 'Digite seu e-mail'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (_emailController.text.isNotEmpty) {
+                try {
+                  await FirebaseAuth.instance
+                      .sendPasswordResetEmail(email: _emailController.text);
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('Email de recuperação de senha enviado!'),
+                  ));
+                } on FirebaseAuthException catch (e) {
+                  String errorMessage;
+                  if (e.code == 'invalid-email') {
+                    errorMessage =
+                        'Email inválido. Por favor, verifique e tente novamente.';
+                  } else if (e.code == 'user-not-found') {
+                    errorMessage = 'Nenhuma conta encontrada com este email.';
+                  } else {
+                    errorMessage =
+                        'Erro ao enviar email de recuperação: ${e.message}';
+                  }
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(errorMessage),
+                  ));
+                }
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('Por favor, insira um email válido.'),
+                ));
+              }
+            },
+            child: Text('Enviar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -167,9 +221,7 @@ class _TelaLoginState extends State<TelaLogin> {
                 ),
                 const SizedBox(height: 12),
                 GestureDetector(
-                  onTap: () {
-                    print('Esqueceu a senha?');
-                  },
+                  onTap: _recuperarSenha,
                   child: Text(
                     'Esqueceu sua senha?',
                     style: TextStyle(
