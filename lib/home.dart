@@ -1,9 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'enviar_mensagem.dart';
+import 'enviar_mensagem.dart'; // Importe a tela de envio de mensagem
 
 class HomeScreen extends StatelessWidget {
+  Future<List<Map<String, dynamic>>> _fetchMensagens() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(user.uid)
+          .get();
+      var userData = userDoc.data() as Map<String, dynamic>;
+      var cursoSemestreMateria =
+          userData['cursoSemestreMateria'] as List<dynamic>;
+
+      List<Map<String, dynamic>> mensagens = [];
+      for (var item in cursoSemestreMateria) {
+        QuerySnapshot mensagensSnapshot = await FirebaseFirestore.instance
+            .collection('mensagens')
+            .where('curso', isEqualTo: item['curso'])
+            .where('semestre', isEqualTo: item['semestre'])
+            .where('materias', arrayContainsAny: item['materias'])
+            .get();
+        mensagens.addAll(mensagensSnapshot.docs
+            .map((doc) => doc.data() as Map<String, dynamic>)
+            .toList());
+      }
+      return mensagens;
+    }
+    return [];
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -11,83 +39,39 @@ class HomeScreen extends StatelessWidget {
         title: Text('Home'),
         backgroundColor: Color.fromRGBO(239, 153, 45, 1),
       ),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => EnviarMensagemScreen()),
-            );
-          },
-          child: Text('Enviar Mensagem'),
-        ),
-      ),
-    );
-  }
-}
-
-class SelecionarSemestreScreen extends StatelessWidget {
-  final String cursoId;
-
-  SelecionarSemestreScreen({required this.cursoId});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Selecione seu semestre'),
-        backgroundColor: Color.fromRGBO(239, 153, 45, 1),
-      ),
-      backgroundColor: Color.fromRGBO(230, 231, 232, 1),
-      body: FutureBuilder<DocumentSnapshot>(
-        future:
-            FirebaseFirestore.instance.collection('cursos').doc(cursoId).get(),
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _fetchMensagens(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           }
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(child: Text('Nenhuma mensagem encontrada.'));
+          }
 
-          var cursoData = snapshot.data!.data() as Map<String, dynamic>;
-          var semestres = cursoData['semestres'] as List<dynamic>;
-
+          var mensagens = snapshot.data!;
           return ListView.builder(
-            itemCount: semestres.length,
+            itemCount: mensagens.length,
             itemBuilder: (context, index) {
+              var mensagem = mensagens[index];
               return ListTile(
-                title: Text(semestres[index]),
-                onTap: () {
-                  var user = FirebaseAuth.instance.currentUser;
-                  var cursoSemestre = {
-                    'curso': cursoData['nome'],
-                    'semestre': semestres[index],
-                  };
-
-                  // Atualize o documento do usuário com o novo atributo
-                  FirebaseFirestore.instance
-                      .collection('usuarios')
-                      .doc(user!.uid)
-                      .update({
-                    'cursoSemestre': cursoSemestre,
-                  }).then((value) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content:
-                          Text('Curso e semestre selecionados com sucesso!'),
-                    ));
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => HomeScreen()),
-                    );
-                  }).catchError((error) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content:
-                          Text('Erro ao selecionar curso e semestre: $error'),
-                    ));
-                  });
-                },
+                title: Text(mensagem['titulo']),
+                subtitle: Text(mensagem['mensagem']),
+                trailing: Text(mensagem['data'].toDate().toString()),
               );
             },
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => EnviarMensagemScreen()),
+          );
+        },
+        child: Icon(Icons.add),
+        backgroundColor: Color.fromRGBO(239, 153, 45, 1),
       ),
     );
   }

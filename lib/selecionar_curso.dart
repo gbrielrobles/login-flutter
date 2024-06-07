@@ -19,7 +19,6 @@ class SelecionarCursoScreen extends StatelessWidget {
           }
 
           var cursos = snapshot.data!.docs;
-
           return ListView.builder(
             itemCount: cursos.length,
             itemBuilder: (context, index) {
@@ -30,8 +29,7 @@ class SelecionarCursoScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          SelecionarSemestreScreen(cursoId: curso.id),
+                      builder: (context) => SelecionarSemestreScreen(cursoId: curso.id),
                     ),
                   );
                 },

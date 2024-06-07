@@ -15,29 +15,33 @@ class SelecionarSemestreScreen extends StatelessWidget {
         backgroundColor: Color.fromRGBO(239, 153, 45, 1),
       ),
       backgroundColor: Color.fromRGBO(230, 231, 232, 1),
-      body: FutureBuilder<DocumentSnapshot>(
-        future:
-            FirebaseFirestore.instance.collection('cursos').doc(cursoId).get(),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('cursos')
+            .doc(cursoId)
+            .collection('semestres')
+            .snapshots(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           }
-
-          var cursoData = snapshot.data!.data() as Map<String, dynamic>;
-          var semestres = cursoData['semestres'] as List<dynamic>;
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Center(child: Text("Sem semestres disponíveis."));
+          }
 
           return ListView.builder(
-            itemCount: semestres.length,
+            itemCount: snapshot.data!.docs.length,
             itemBuilder: (context, index) {
+              var semestre = snapshot.data!.docs[index];
               return ListTile(
-                title: Text(semestres[index]),
+                title: Text(semestre.get('nome')),
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => SelecionarMateriaScreen(
                         cursoId: cursoId,
-                        semestre: semestres[index],
+                        semestre: semestre.get('nome'),
                       ),
                     ),
                   );

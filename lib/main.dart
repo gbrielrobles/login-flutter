@@ -17,8 +17,9 @@ void main() async {
 Future<void> addCoursesToFirestore() async {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-  var courses = {
-    "eng_software": {
+  List<Map<String, dynamic>> courses = [
+    {
+      "id": "eng_software",
       "nome": "Engenharia de Software",
       "semestres": [
         {
@@ -189,7 +190,8 @@ Future<void> addCoursesToFirestore() async {
         },
       ]
     },
-    "ads": {
+    {
+      "id": "ads",
       "nome": "Análise e Desenvolvimento de Sistemas",
       "semestres": [
         {
@@ -333,41 +335,22 @@ Future<void> addCoursesToFirestore() async {
         },
       ]
     }
-  };
+  ];
 
-  // Adding the courses to Firestore
-  for (var entry in courses.entries) {
-    var courseId = entry.key;
-    var courseData = entry.value as Map<String, dynamic>;
+  for (var course in courses) {
+    DocumentReference courseRef =
+        firestore.collection('cursos').doc(course['id']);
+    await courseRef.set({'nome': course['nome']});
 
-    DocumentReference courseRef = firestore.collection('cursos').doc(courseId);
-    await courseRef.set({
-      'nome': courseData['nome'],
-      'semestres': (courseData['semestres'] as List)
-          .map((s) => (s as Map<String, dynamic>)['nome'])
-          .toList(),
-    });
+    for (var semestre in course['semestres']) {
+      DocumentReference semestreRef =
+          courseRef.collection('semestres').doc(semestre['nome']);
+      await semestreRef.set({'nome': semestre['nome']});
 
-    for (var semestreData in (courseData['semestres'] as List)) {
-      var semestreMap = semestreData as Map<String, dynamic>;
-      DocumentReference semestreRef = firestore
-          .collection('semestres')
-          .doc('${courseId}_${semestreMap['nome'].replaceAll(" ", "_")}');
-      await semestreRef.set({
-        'nome': semestreMap['nome'],
-        'materias': (semestreMap['materias'] as List)
-            .map((m) => (m as Map<String, dynamic>)['nome'])
-            .toList(),
-      });
-
-      for (var materiaData in (semestreMap['materias'] as List)) {
-        var materiaMap = materiaData as Map<String, dynamic>;
-        DocumentReference materiaRef = firestore.collection('materias').doc(
-            '${courseId}_${semestreMap['nome'].replaceAll(" ", "_")}_${materiaMap['nome'].replaceAll(" ", "_")}');
-        await materiaRef.set({
-          'nome': materiaMap['nome'],
-          'descricao': materiaMap['descricao'],
-        });
+      for (var materia in semestre['materias']) {
+        await semestreRef
+            .collection('materias')
+            .add({'nome': materia['nome'], 'descricao': materia['descricao']});
       }
     }
   }
@@ -382,7 +365,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    addCoursesToFirestore();
+    //addCoursesToFirestore();
   }
 
   @override

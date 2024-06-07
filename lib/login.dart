@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'cadastro.dart';
-import 'selecionar_curso.dart'; // Importar a tela de seleção de curso
+import 'selecionar_curso.dart';
+import 'home.dart'; // Importar a tela inicial
 
 class TelaLogin extends StatefulWidget {
   const TelaLogin({Key? key}) : super(key: key);
@@ -38,12 +40,26 @@ class _TelaLoginState extends State<TelaLogin> {
       );
 
       if (userCredential.user!.emailVerified) {
-        // Navegar para a tela de seleção de curso
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-              builder: (context) =>
-                  SelecionarCursoScreen()), // Navega para a tela de seleção de curso
-        );
+        var userDoc = await FirebaseFirestore.instance
+            .collection('usuarios')
+            .doc(userCredential.user!.uid)
+            .get();
+
+        if (userDoc.exists) {
+          var userData = userDoc.data() as Map<String, dynamic>;
+          if (userData.containsKey('cursoSemestreMateria') &&
+              (userData['cursoSemestreMateria'] as List<dynamic>).isNotEmpty) {
+            // Se cursoSemestreMateria existir e não estiver vazio, navegue para HomeScreen
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => HomeScreen()),
+            );
+          } else {
+            // Se não, navegue para a tela de seleção de curso
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => SelecionarCursoScreen()),
+            );
+          }
+        }
       } else {
         _exibirPopup('Erro de autenticação',
             'Por favor, verifique seu email antes de fazer login.');
