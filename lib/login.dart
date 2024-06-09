@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print, prefer_const_constructors, use_build_context_synchronously, use_super_parameters, no_leading_underscores_for_local_identifiers
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

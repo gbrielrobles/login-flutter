@@ -1,3 +1,5 @@
+// ignore_for_file: use_super_parameters, prefer_const_constructors, library_private_types_in_public_api, use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -30,7 +32,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
   final _chaveForm = GlobalKey<FormState>();
   var _nomeUsuario = '';
   var _senha = '';
-  var _cpf = '';
+  var _ra = '';
   var _email = '';
   var _tipoUsuario = 'Estudante';
 
@@ -148,7 +150,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                   },
                   onSaved: (value) {
                     // Salva o CPF institucional
-                    _cpf = value!;
+                    _ra = value!;
                   },
                 ),
               ),
@@ -207,7 +209,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                           .set({
                         'nomeUsuario': _nomeUsuario,
                         'senha': _senha,
-                        'cpf': _cpf,
+                        'R.A': _ra,
                         'email': _email,
                         'tipoUsuario': _tipoUsuario,
                       });

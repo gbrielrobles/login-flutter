@@ -1,3 +1,5 @@
+// ignore_for_file: library_private_types_in_public_api, sort_child_properties_last
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -5,11 +7,18 @@ import 'enviar_mensagem.dart'; // Importe a tela de envio de mensagem
 import 'selecionar_curso.dart'; // Importe a tela de seleção de curso
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  List<Map<String, dynamic>> _filteredMessages = [];
+  bool _materiaFilter = false;
+  bool _lidoFilter = false;
+  List<String> _materiasUsuario = []; // Lista de matérias do usuário
+
   Future<List<Map<String, dynamic>>> _fetchMensagens() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -33,19 +42,36 @@ class _HomeScreenState extends State<HomeScreen> {
             .map((doc) => {'id': doc.id, ...doc.data() as Map<String, dynamic>})
             .toList());
       }
+
+      // Lista de matérias do usuário
+      _materiasUsuario = [];
+      for (var item in cursoSemestreMateria) {
+        _materiasUsuario.addAll(item['materias'].cast<String>());
+      }
+
       return mensagens;
     }
     return [];
+  }
+
+  void filterMateria(List<Map<String, dynamic>> mensagens, String materia) {
+    setState(() {
+      _filteredMessages = mensagens.where((mensagem) {
+        List materias = mensagem['materias'];
+        return materias.contains(materia);
+      }).toList();
+      _materiaFilter = true;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home'),
-        backgroundColor: Color.fromRGBO(239, 153, 45, 1),
+        title: const Text('Home'),
+        backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.pushReplacement(
               context,
@@ -58,13 +84,13 @@ class _HomeScreenState extends State<HomeScreen> {
         future: _fetchMensagens(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('Nenhuma mensagem encontrada.'));
+            return const Center(child: Text('Nenhuma mensagem encontrada.'));
           }
 
-          var mensagens = snapshot.data!;
+          var mensagens = _materiaFilter ? _filteredMessages : snapshot.data!;
           return ListView.builder(
             itemCount: mensagens.length,
             itemBuilder: (context, index) {
@@ -105,9 +131,45 @@ class _HomeScreenState extends State<HomeScreen> {
             setState(() {});
           });
         },
-        child: Icon(Icons.add),
-        backgroundColor: Color.fromRGBO(239, 153, 45, 1),
+        child: const Icon(Icons.add),
+        backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
       ),
+      bottomNavigationBar: BottomAppBar(
+        color: const Color(0xFF3A5C33),
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 6.0,
+        child: IconTheme(
+          data: IconThemeData(color: Theme.of(context).colorScheme.onPrimary),
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+
+              //Botão de ver lista de matérias para filtrar
+              IconButton(
+                tooltip: 'Filtrar Por Matéria',
+                icon: const Icon(Icons.filter_list),
+                onPressed: () {
+                },
+              ),
+
+              //Botão de filtrar lidas e não lidas 
+              IconButton(
+                tooltip: 'Filtrar Não Lidas',
+                icon: Icon(_lidoFilter
+                    ? Icons.mark_email_unread
+                    : Icons.mark_email_unread_outlined),
+                onPressed: () {
+                  setState(() {
+                    _lidoFilter = !_lidoFilter;
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 }

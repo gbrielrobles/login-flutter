@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously, library_private_types_in_public_api
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,7 +9,7 @@ class SelecionarMateriaScreen extends StatefulWidget {
   final String cursoId;
   final String semestre;
 
-  SelecionarMateriaScreen({required this.cursoId, required this.semestre});
+  const SelecionarMateriaScreen({super.key, required this.cursoId, required this.semestre});
 
   @override
   _SelecionarMateriaScreenState createState() =>
@@ -16,36 +18,45 @@ class SelecionarMateriaScreen extends StatefulWidget {
 
 class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
   Map<String, bool> materiasSelecionadas = {};
+  final TextEditingController _materiaController = TextEditingController();
+  final TextEditingController _descricaoController = TextEditingController();
 
   String generateDocumentId(String input) {
     return input.replaceAll(' ', '_').toLowerCase();
   }
 
+  @override
+  void dispose() {
+    _materiaController.dispose();
+    _descricaoController.dispose();
+    super.dispose();
+  }
+
   Future<void> _adicionarMateria(BuildContext context) async {
-    final TextEditingController _materiaController = TextEditingController();
-    final TextEditingController _descricaoController = TextEditingController();
+    _materiaController.clear();
+    _descricaoController.clear();
 
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Adicionar Matéria'),
+        title: const Text('Adicionar Matéria'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: _materiaController,
-              decoration: InputDecoration(hintText: 'Nome da Matéria'),
+              decoration: const InputDecoration(hintText: 'Nome da Matéria'),
             ),
             TextField(
               controller: _descricaoController,
-              decoration: InputDecoration(hintText: 'Descrição da Matéria'),
+              decoration: const InputDecoration(hintText: 'Descrição da Matéria'),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar'),
+            child: const Text('Cancelar'),
           ),
           TextButton(
             onPressed: () async {
@@ -66,7 +77,7 @@ class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
                 Navigator.pop(context);
               }
             },
-            child: Text('Salvar'),
+            child: const Text('Salvar'),
           ),
         ],
       ),
@@ -75,32 +86,30 @@ class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
 
   Future<void> _editarMateria(
       BuildContext context, DocumentSnapshot materia) async {
-    final TextEditingController _materiaController =
-        TextEditingController(text: materia['nome']);
-    final TextEditingController _descricaoController =
-        TextEditingController(text: materia['descricao']);
+    _materiaController.text = materia['nome'];
+    _descricaoController.text = materia['descricao'];
 
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Editar Matéria'),
+        title: const Text('Editar Matéria'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: _materiaController,
-              decoration: InputDecoration(hintText: 'Nome da Matéria'),
+              decoration: const InputDecoration(hintText: 'Nome da Matéria'),
             ),
             TextField(
               controller: _descricaoController,
-              decoration: InputDecoration(hintText: 'Descrição da Matéria'),
+              decoration: const InputDecoration(hintText: 'Descrição da Matéria'),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar'),
+            child: const Text('Cancelar'),
           ),
           TextButton(
             onPressed: () async {
@@ -120,7 +129,7 @@ class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
                 Navigator.pop(context);
               }
             },
-            child: Text('Salvar'),
+            child: const Text('Salvar'),
           ),
         ],
       ),
@@ -143,16 +152,16 @@ class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Selecione suas Matérias'),
-        backgroundColor: Color.fromRGBO(239, 153, 45, 1),
+        title: const Text('Selecione suas Matérias'),
+        backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
         actions: [
           IconButton(
-            icon: Icon(Icons.add),
+            icon: const Icon(Icons.add),
             onPressed: () => _adicionarMateria(context),
           ),
         ],
       ),
-      backgroundColor: Color.fromRGBO(230, 231, 232, 1),
+      backgroundColor: const Color.fromRGBO(230, 231, 232, 1),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('cursos')
@@ -163,10 +172,10 @@ class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(
+            return const Center(
                 child: Text("Nenhuma matéria encontrada para este semestre."));
           }
 
@@ -182,11 +191,11 @@ class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: Icon(Icons.edit),
+                      icon: const Icon(Icons.edit),
                       onPressed: () => _editarMateria(context, materia),
                     ),
                     IconButton(
-                      icon: Icon(Icons.delete),
+                      icon: const Icon(Icons.delete),
                       onPressed: () => _excluirMateria(context, materia),
                     ),
                   ],
@@ -222,7 +231,7 @@ class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
           // Obtém a lista de cursoSemestreMateria
           var userData = userDoc.data() as Map<String, dynamic>;
           var cursoSemestreMateriaArray =
-              userData['cursoSemestreMateria'] as List<dynamic> ?? [];
+              (userData['cursoSemestreMateria'] as List<dynamic>? ?? []);
 
           // Encontra o índice do item correspondente ao curso e semestre, se existir
           int index = cursoSemestreMateriaArray.indexWhere((item) =>
@@ -245,17 +254,17 @@ class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
             'cursoSemestreMateria': cursoSemestreMateriaArray,
           }).then((value) {
             ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Matérias selecionadas com sucesso!')));
+                const SnackBar(content: Text('Matérias selecionadas com sucesso!')));
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => HomeScreen()),
+              MaterialPageRoute(builder: (context) => const HomeScreen()),
             );
           }).catchError((error) {
             ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('Erro ao selecionar matérias: $error')));
           });
         },
-        child: Icon(Icons.save),
+        child: const Icon(Icons.save),
       ),
     );
   }
