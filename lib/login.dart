@@ -50,14 +50,19 @@ class _TelaLoginState extends State<TelaLogin> {
           if (userData.containsKey('cursoSemestreMateria') &&
               (userData['cursoSemestreMateria'] as List<dynamic>).isNotEmpty) {
             // Se cursoSemestreMateria existir e não estiver vazio, navegue para HomeScreen
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => HomeScreen()),
-            );
+            if (mounted) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => HomeScreen()),
+              );
+            }
           } else {
             // Se não, navegue para a tela de seleção de curso
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => SelecionarCursoScreen()),
-            );
+            if (mounted) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                    builder: (context) => SelecionarCursoScreen()),
+              );
+            }
           }
         }
       } else {
@@ -88,7 +93,7 @@ class _TelaLoginState extends State<TelaLogin> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         );
@@ -98,33 +103,33 @@ class _TelaLoginState extends State<TelaLogin> {
 
   void _irParaCadastro(BuildContext context) {
     Navigator.of(context)
-        .push(MaterialPageRoute(builder: (context) => Cadastro()));
+        .push(MaterialPageRoute(builder: (context) => const Cadastro()));
   }
 
   Future<void> _recuperarSenha() async {
-    final TextEditingController _emailController = TextEditingController();
+    final TextEditingController emailController = TextEditingController();
 
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Recuperar Senha'),
+        title: const Text('Recuperar Senha'),
         content: TextField(
-          controller: _emailController,
-          decoration: InputDecoration(hintText: 'Digite seu e-mail'),
+          controller: emailController,
+          decoration: const InputDecoration(hintText: 'Digite seu e-mail'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar'),
+            child: const Text('Cancelar'),
           ),
           TextButton(
             onPressed: () async {
-              if (_emailController.text.isNotEmpty) {
+              if (emailController.text.isNotEmpty) {
                 try {
                   await FirebaseAuth.instance
-                      .sendPasswordResetEmail(email: _emailController.text);
+                      .sendPasswordResetEmail(email: emailController.text);
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text('Email de recuperação de senha enviado!'),
                   ));
                 } on FirebaseAuthException catch (e) {
@@ -143,12 +148,12 @@ class _TelaLoginState extends State<TelaLogin> {
                   ));
                 }
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                   content: Text('Por favor, insira um email válido.'),
                 ));
               }
             },
-            child: Text('Enviar'),
+            child: const Text('Enviar'),
           ),
         ],
       ),
@@ -161,7 +166,7 @@ class _TelaLoginState extends State<TelaLogin> {
       appBar: AppBar(
         backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
       ),
-      backgroundColor: Color.fromRGBO(230, 231, 232, 1),
+      backgroundColor: const Color.fromRGBO(230, 231, 232, 1),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -222,7 +227,7 @@ class _TelaLoginState extends State<TelaLogin> {
                 const SizedBox(height: 12),
                 GestureDetector(
                   onTap: _recuperarSenha,
-                  child: Text(
+                  child: const Text(
                     'Esqueceu sua senha?',
                     style: TextStyle(
                       color: Color.fromRGBO(58, 92, 51, 1),
@@ -235,17 +240,18 @@ class _TelaLoginState extends State<TelaLogin> {
                   onPressed: _enviar,
                   style: ButtonStyle(
                     backgroundColor: MaterialStateProperty.all<Color>(
-                      Color.fromRGBO(58, 92, 51, 1),
+                      const Color.fromRGBO(58, 92, 51, 1),
                     ),
                   ),
-                  child: Text('Entrar', style: TextStyle(color: Colors.white)),
+                  child: const Text('Entrar',
+                      style: TextStyle(color: Colors.white)),
                 ),
                 const SizedBox(height: 20),
                 TextButton(
                   onPressed: () {
                     _irParaCadastro(context);
                   },
-                  child: Text(
+                  child: const Text(
                     'Não possui uma conta? Registre-se Aqui',
                     style: TextStyle(color: Colors.black),
                   ),

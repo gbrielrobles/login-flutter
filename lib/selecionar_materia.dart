@@ -7,7 +7,9 @@ class SelecionarMateriaScreen extends StatefulWidget {
   final String cursoId;
   final String semestre;
 
-  SelecionarMateriaScreen({required this.cursoId, required this.semestre});
+  const SelecionarMateriaScreen(
+      {Key? key, required this.cursoId, required this.semestre})
+      : super(key: key);
 
   @override
   _SelecionarMateriaScreenState createState() =>
@@ -39,8 +41,9 @@ class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
 
       if (selecaoAtual != null) {
         setState(() {
-          materiasSelecionadas = Map.fromIterable(selecaoAtual['materias'],
-              key: (e) => e, value: (e) => true);
+          materiasSelecionadas = {
+            for (var e in selecaoAtual['materias']) e: true,
+          };
         });
       }
     }
@@ -50,10 +53,10 @@ class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Selecione suas Matérias'),
-        backgroundColor: Color.fromRGBO(239, 153, 45, 1),
+        title: const Text('Selecione suas Matérias'),
+        backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
       ),
-      backgroundColor: Color.fromRGBO(230, 231, 232, 1),
+      backgroundColor: const Color.fromRGBO(230, 231, 232, 1),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('cursos')
@@ -64,10 +67,10 @@ class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(
+            return const Center(
                 child: Text("Nenhuma matéria encontrada para este semestre."));
           }
 
@@ -94,8 +97,8 @@ class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _salvarSelecoes,
-        child: Icon(Icons.save),
-        backgroundColor: Color.fromRGBO(239, 153, 45, 1),
+        child: const Icon(Icons.save),
+        backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
       ),
     );
   }
@@ -109,7 +112,7 @@ class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
   Future<void> _salvarSelecoes() async {
     if (materiasSelecionadas.isEmpty ||
         !materiasSelecionadas.containsValue(true)) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Por favor, selecione pelo menos uma matéria.'),
       ));
       return;
@@ -154,8 +157,12 @@ class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Matérias selecionadas com sucesso!')));
-    Navigator.push(
-        context, MaterialPageRoute(builder: (context) => HomeScreen()));
+        const SnackBar(content: Text('Matérias selecionadas com sucesso!')));
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+      );
+    }
   }
 }

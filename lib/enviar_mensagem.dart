@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'home.dart';
 
 class EnviarMensagemScreen extends StatefulWidget {
   final String? mensagemId;
@@ -12,7 +11,8 @@ class EnviarMensagemScreen extends StatefulWidget {
   final List<String>? materias;
   final DateTime? data;
 
-  EnviarMensagemScreen({
+  const EnviarMensagemScreen({
+    Key? key,
     this.mensagemId,
     this.titulo,
     this.mensagem,
@@ -20,7 +20,7 @@ class EnviarMensagemScreen extends StatefulWidget {
     this.semestre,
     this.materias,
     this.data,
-  });
+  }) : super(key: key);
 
   @override
   _EnviarMensagemScreenState createState() => _EnviarMensagemScreenState();
@@ -95,7 +95,7 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
       if (_cursoSelecionado == null ||
           _semestreSelecionado == null ||
           _materiasSelecionadas.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(
               'Por favor, selecione o curso, semestre e pelo menos uma matéria.'),
         ));
@@ -133,7 +133,7 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
 
           if (widget.mensagemId == null) {
             await FirebaseFirestore.instance.collection('mensagens').add(data);
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
               content: Text('Mensagem enviada com sucesso!'),
             ));
           } else {
@@ -141,19 +141,21 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
                 .collection('mensagens')
                 .doc(widget.mensagemId)
                 .update(data);
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
               content: Text('Mensagem atualizada com sucesso!'),
             ));
           }
 
-          Navigator.pop(context, true); // Indica que uma atualização ocorreu
+          if (mounted) {
+            Navigator.pop(context, true); // Indica que uma atualização ocorreu
+          }
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('Erro ao enviar mensagem: $e'),
           ));
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Erro: Usuário não está autenticado.'),
         ));
       }
@@ -167,10 +169,11 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
       firstDate: DateTime.now(),
       lastDate: DateTime(2101),
     );
-    if (picked != null && picked != _dataSelecionada)
+    if (picked != null && picked != _dataSelecionada) {
       setState(() {
         _dataSelecionada = picked;
       });
+    }
   }
 
   Future<void> _selecionarHora(BuildContext context) async {
@@ -178,10 +181,11 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
       context: context,
       initialTime: _horaSelecionada ?? TimeOfDay.now(),
     );
-    if (picked != null && picked != _horaSelecionada)
+    if (picked != null && picked != _horaSelecionada) {
       setState(() {
         _horaSelecionada = picked;
       });
+    }
   }
 
   @override
@@ -190,7 +194,7 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
       appBar: AppBar(
         title: Text(
             widget.mensagemId == null ? 'Enviar Mensagem' : 'Editar Mensagem'),
-        backgroundColor: Color.fromRGBO(239, 153, 45, 1),
+        backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -201,7 +205,7 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
             children: [
               TextFormField(
                 initialValue: _titulo,
-                decoration: InputDecoration(labelText: 'Título'),
+                decoration: const InputDecoration(labelText: 'Título'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Por favor, insira um título';
@@ -214,7 +218,7 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
               ),
               TextFormField(
                 initialValue: _mensagem,
-                decoration: InputDecoration(labelText: 'Mensagem'),
+                decoration: const InputDecoration(labelText: 'Mensagem'),
                 maxLines: 5,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -227,7 +231,7 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
                 },
               ),
               DropdownButtonFormField<String>(
-                decoration: InputDecoration(labelText: 'Curso'),
+                decoration: const InputDecoration(labelText: 'Curso'),
                 items: cursos
                     .map((curso) => DropdownMenuItem(
                           value: curso,
@@ -251,7 +255,7 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
                 },
               ),
               DropdownButtonFormField<String>(
-                decoration: InputDecoration(labelText: 'Semestre'),
+                decoration: const InputDecoration(labelText: 'Semestre'),
                 items: semestres
                     .map((semestre) => DropdownMenuItem(
                           value: semestre,
@@ -303,7 +307,7 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
                           : 'Data: ${_dataSelecionada!.day}/${_dataSelecionada!.month}/${_dataSelecionada!.year}'),
                     ),
                   ),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () => _selecionarHora(context),
@@ -314,11 +318,11 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
                   ),
                 ],
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _enviarMensagem,
                 child: Text(widget.mensagemId == null ? 'Enviar' : 'Atualizar',
-                    style: TextStyle(color: Colors.white)),
+                    style: const TextStyle(color: Colors.white)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                 ),

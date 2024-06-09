@@ -6,42 +6,43 @@ import 'selecionar_materia.dart';
 class SelecionarSemestreScreen extends StatelessWidget {
   final String cursoId;
 
-  SelecionarSemestreScreen({required this.cursoId});
+  const SelecionarSemestreScreen({Key? key, required this.cursoId})
+      : super(key: key);
 
   String generateDocumentId(String input) {
     return input.replaceAll(' ', '_').toLowerCase();
   }
 
   Future<void> _adicionarSemestre(BuildContext context) async {
-    final TextEditingController _semestreController = TextEditingController();
+    final TextEditingController semestreController = TextEditingController();
 
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Adicionar Semestre'),
+        title: const Text('Adicionar Semestre'),
         content: TextField(
-          controller: _semestreController,
-          decoration: InputDecoration(hintText: 'Nome do Semestre'),
+          controller: semestreController,
+          decoration: const InputDecoration(hintText: 'Nome do Semestre'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar'),
+            child: const Text('Cancelar'),
           ),
           TextButton(
             onPressed: () async {
-              if (_semestreController.text.isNotEmpty) {
-                String docId = generateDocumentId(_semestreController.text);
+              if (semestreController.text.isNotEmpty) {
+                String docId = generateDocumentId(semestreController.text);
                 await FirebaseFirestore.instance
                     .collection('cursos')
                     .doc(cursoId)
                     .collection('semestres')
                     .doc(docId)
-                    .set({'nome': _semestreController.text});
+                    .set({'nome': semestreController.text});
                 Navigator.pop(context);
               }
             },
-            child: Text('Salvar'),
+            child: const Text('Salvar'),
           ),
         ],
       ),
@@ -50,35 +51,35 @@ class SelecionarSemestreScreen extends StatelessWidget {
 
   Future<void> _editarSemestre(
       BuildContext context, DocumentSnapshot semestre) async {
-    final TextEditingController _semestreController =
+    final TextEditingController semestreController =
         TextEditingController(text: semestre['nome']);
 
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Editar Semestre'),
+        title: const Text('Editar Semestre'),
         content: TextField(
-          controller: _semestreController,
-          decoration: InputDecoration(hintText: 'Nome do Semestre'),
+          controller: semestreController,
+          decoration: const InputDecoration(hintText: 'Nome do Semestre'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar'),
+            child: const Text('Cancelar'),
           ),
           TextButton(
             onPressed: () async {
-              if (_semestreController.text.isNotEmpty) {
+              if (semestreController.text.isNotEmpty) {
                 await FirebaseFirestore.instance
                     .collection('cursos')
                     .doc(cursoId)
                     .collection('semestres')
                     .doc(semestre.id)
-                    .update({'nome': _semestreController.text});
+                    .update({'nome': semestreController.text});
                 Navigator.pop(context);
               }
             },
-            child: Text('Salvar'),
+            child: const Text('Salvar'),
           ),
         ],
       ),
@@ -99,8 +100,8 @@ class SelecionarSemestreScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Selecione seu Semestre'),
-        backgroundColor: Color.fromRGBO(239, 153, 45, 1),
+        title: const Text('Selecione seu Semestre'),
+        backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
         actions: [
           StreamBuilder<DocumentSnapshot>(
             stream: FirebaseFirestore.instance
@@ -109,21 +110,21 @@ class SelecionarSemestreScreen extends StatelessWidget {
                 .snapshots(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
-                return SizedBox.shrink();
+                return const SizedBox.shrink();
               }
               var userData = snapshot.data!.data() as Map<String, dynamic>;
               if (userData['tipoUsuario'] == 'Professor') {
                 return IconButton(
-                  icon: Icon(Icons.add),
+                  icon: const Icon(Icons.add),
                   onPressed: () => _adicionarSemestre(context),
                 );
               }
-              return SizedBox.shrink();
+              return const SizedBox.shrink();
             },
           ),
         ],
       ),
-      backgroundColor: Color.fromRGBO(230, 231, 232, 1),
+      backgroundColor: const Color.fromRGBO(230, 231, 232, 1),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('cursos')
@@ -132,10 +133,10 @@ class SelecionarSemestreScreen extends StatelessWidget {
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(child: Text("Sem semestres disponíveis."));
+            return const Center(child: Text("Sem semestres disponíveis."));
           }
 
           return ListView.builder(
@@ -151,7 +152,7 @@ class SelecionarSemestreScreen extends StatelessWidget {
                       .snapshots(),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
-                      return SizedBox.shrink();
+                      return const SizedBox.shrink();
                     }
                     var userData =
                         snapshot.data!.data() as Map<String, dynamic>;
@@ -160,18 +161,18 @@ class SelecionarSemestreScreen extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            icon: Icon(Icons.edit),
+                            icon: const Icon(Icons.edit),
                             onPressed: () => _editarSemestre(context, semestre),
                           ),
                           IconButton(
-                            icon: Icon(Icons.delete),
+                            icon: const Icon(Icons.delete),
                             onPressed: () =>
                                 _excluirSemestre(context, semestre),
                           ),
                         ],
                       );
                     }
-                    return SizedBox.shrink();
+                    return const SizedBox.shrink();
                   },
                 ),
                 onTap: () {

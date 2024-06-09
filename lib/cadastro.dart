@@ -12,7 +12,7 @@ class Cadastro extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       home: CadastroScreen(),
     );
   }
@@ -186,7 +186,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                   },
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () async {
                   // Valida o formulário e salva os dados
@@ -217,13 +217,13 @@ class _CadastroScreenState extends State<CadastroScreen> {
                       await user!.sendEmailVerification();
 
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text(
+                        content: const Text(
                             'Verifique seu email para confirmar o cadastro'),
                       ));
                       Navigator.pushReplacement(
                           context,
                           // Volta para a tela de login em caso de erro
-                          MaterialPageRoute(builder: (context) => TelaLogin()));
+                          MaterialPageRoute(builder: (context) =>const TelaLogin()));
                     } on FirebaseAuthException catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                         content: Text('Erro ao criar usuário: ${e.message}'),
@@ -233,7 +233,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                 },
                 child: Text('Prosseguir'),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               // Volta para a tela de login
               ElevatedButton(
                 onPressed: () {
@@ -242,7 +242,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                     MaterialPageRoute(builder: (context) => TelaLogin()),
                   );
                 },
-                child: Text(
+                child: const Text(
                   'Cancelar',
                 ),
               ),
