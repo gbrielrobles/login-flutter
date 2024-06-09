@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'selecionar_semestre.dart';
 
 class SelecionarCursoScreen extends StatelessWidget {
@@ -41,7 +42,8 @@ class SelecionarCursoScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _editarCurso(BuildContext context, DocumentSnapshot curso) async {
+  Future<void> _editarCurso(
+      BuildContext context, DocumentSnapshot curso) async {
     final TextEditingController _cursoController =
         TextEditingController(text: curso['nome']);
 
@@ -75,8 +77,12 @@ class SelecionarCursoScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _excluirCurso(BuildContext context, DocumentSnapshot curso) async {
-    await FirebaseFirestore.instance.collection('cursos').doc(curso.id).delete();
+  Future<void> _excluirCurso(
+      BuildContext context, DocumentSnapshot curso) async {
+    await FirebaseFirestore.instance
+        .collection('cursos')
+        .doc(curso.id)
+        .delete();
   }
 
   @override
@@ -86,9 +92,24 @@ class SelecionarCursoScreen extends StatelessWidget {
         title: Text('Selecione seu Curso'),
         backgroundColor: Color.fromRGBO(239, 153, 45, 1),
         actions: [
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: () => _adicionarCurso(context),
+          StreamBuilder<DocumentSnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('usuarios')
+                .doc(FirebaseAuth.instance.currentUser!.uid)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return SizedBox.shrink();
+              }
+              var userData = snapshot.data!.data() as Map<String, dynamic>;
+              if (userData['tipoUsuario'] == 'Professor') {
+                return IconButton(
+                  icon: Icon(Icons.add),
+                  onPressed: () => _adicionarCurso(context),
+                );
+              }
+              return SizedBox.shrink();
+            },
           ),
         ],
       ),
@@ -107,24 +128,41 @@ class SelecionarCursoScreen extends StatelessWidget {
               var curso = cursos[index];
               return ListTile(
                 title: Text(curso['nome']),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.edit),
-                      onPressed: () => _editarCurso(context, curso),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.delete),
-                      onPressed: () => _excluirCurso(context, curso),
-                    ),
-                  ],
+                trailing: StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('usuarios')
+                      .doc(FirebaseAuth.instance.currentUser!.uid)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return SizedBox.shrink();
+                    }
+                    var userData =
+                        snapshot.data!.data() as Map<String, dynamic>;
+                    if (userData['tipoUsuario'] == 'Professor') {
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.edit),
+                            onPressed: () => _editarCurso(context, curso),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () => _excluirCurso(context, curso),
+                          ),
+                        ],
+                      );
+                    }
+                    return SizedBox.shrink();
+                  },
                 ),
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => SelecionarSemestreScreen(cursoId: curso.id),
+                      builder: (context) =>
+                          SelecionarSemestreScreen(cursoId: curso.id),
                     ),
                   );
                 },

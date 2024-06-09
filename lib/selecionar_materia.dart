@@ -17,126 +17,33 @@ class SelecionarMateriaScreen extends StatefulWidget {
 class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
   Map<String, bool> materiasSelecionadas = {};
 
-  String generateDocumentId(String input) {
-    return input.replaceAll(' ', '_').toLowerCase();
+  @override
+  void initState() {
+    super.initState();
+    _carregarSelecoesIniciais();
   }
 
-  Future<void> _adicionarMateria(BuildContext context) async {
-    final TextEditingController _materiaController = TextEditingController();
-    final TextEditingController _descricaoController = TextEditingController();
+  Future<void> _carregarSelecoesIniciais() async {
+    var userDoc = await FirebaseFirestore.instance
+        .collection('usuarios')
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .get();
+    var userData = userDoc.data() as Map<String, dynamic>?;
 
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Adicionar Matéria'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _materiaController,
-              decoration: InputDecoration(hintText: 'Nome da Matéria'),
-            ),
-            TextField(
-              controller: _descricaoController,
-              decoration: InputDecoration(hintText: 'Descrição da Matéria'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () async {
-              if (_materiaController.text.isNotEmpty &&
-                  _descricaoController.text.isNotEmpty) {
-                String docId = generateDocumentId(_materiaController.text);
-                await FirebaseFirestore.instance
-                    .collection('cursos')
-                    .doc(widget.cursoId)
-                    .collection('semestres')
-                    .doc(widget.semestre)
-                    .collection('materias')
-                    .doc(docId)
-                    .set({
-                  'nome': _materiaController.text,
-                  'descricao': _descricaoController.text,
-                });
-                Navigator.pop(context);
-              }
-            },
-            child: Text('Salvar'),
-          ),
-        ],
-      ),
-    );
-  }
+    if (userData != null && userData['cursoSemestreMateria'] != null) {
+      List<dynamic> selecoes = userData['cursoSemestreMateria'];
+      var selecaoAtual = selecoes.firstWhere(
+          (s) =>
+              s['curso'] == widget.cursoId && s['semestre'] == widget.semestre,
+          orElse: () => null);
 
-  Future<void> _editarMateria(
-      BuildContext context, DocumentSnapshot materia) async {
-    final TextEditingController _materiaController =
-        TextEditingController(text: materia['nome']);
-    final TextEditingController _descricaoController =
-        TextEditingController(text: materia['descricao']);
-
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Editar Matéria'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _materiaController,
-              decoration: InputDecoration(hintText: 'Nome da Matéria'),
-            ),
-            TextField(
-              controller: _descricaoController,
-              decoration: InputDecoration(hintText: 'Descrição da Matéria'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () async {
-              if (_materiaController.text.isNotEmpty &&
-                  _descricaoController.text.isNotEmpty) {
-                await FirebaseFirestore.instance
-                    .collection('cursos')
-                    .doc(widget.cursoId)
-                    .collection('semestres')
-                    .doc(widget.semestre)
-                    .collection('materias')
-                    .doc(materia.id)
-                    .update({
-                  'nome': _materiaController.text,
-                  'descricao': _descricaoController.text,
-                });
-                Navigator.pop(context);
-              }
-            },
-            child: Text('Salvar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _excluirMateria(
-      BuildContext context, DocumentSnapshot materia) async {
-    await FirebaseFirestore.instance
-        .collection('cursos')
-        .doc(widget.cursoId)
-        .collection('semestres')
-        .doc(widget.semestre)
-        .collection('materias')
-        .doc(materia.id)
-        .delete();
+      if (selecaoAtual != null) {
+        setState(() {
+          materiasSelecionadas = Map.fromIterable(selecaoAtual['materias'],
+              key: (e) => e, value: (e) => true);
+        });
+      }
+    }
   }
 
   @override
@@ -145,12 +52,6 @@ class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
       appBar: AppBar(
         title: Text('Selecione suas Matérias'),
         backgroundColor: Color.fromRGBO(239, 153, 45, 1),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: () => _adicionarMateria(context),
-          ),
-        ],
       ),
       backgroundColor: Color.fromRGBO(230, 231, 232, 1),
       body: StreamBuilder<QuerySnapshot>(
@@ -175,27 +76,16 @@ class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
             itemCount: materias.length,
             itemBuilder: (context, index) {
               var materia = materias[index];
-              return ListTile(
+              bool isSelected = materiasSelecionadas[materia['nome']] ?? false;
+
+              return CheckboxListTile(
                 title: Text(materia['nome']),
                 subtitle: Text(materia['descricao']),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.edit),
-                      onPressed: () => _editarMateria(context, materia),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.delete),
-                      onPressed: () => _excluirMateria(context, materia),
-                    ),
-                  ],
-                ),
-                onTap: () {
-                  setState(() {
-                    materiasSelecionadas[materia['nome']] =
-                        !materiasSelecionadas[materia['nome']]!;
-                  });
+                value: isSelected,
+                onChanged: (bool? newValue) {
+                  if (newValue != null) {
+                    _updateMateriasSelecionadas(materia['nome'], newValue);
+                  }
                 },
               );
             },
@@ -203,60 +93,69 @@ class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          var user = FirebaseAuth.instance.currentUser;
-          var cursoSemestreMateria = {
-            'curso': widget.cursoId,
-            'semestre': widget.semestre,
-            'materias': materiasSelecionadas.keys
-                .where((k) => materiasSelecionadas[k]!)
-                .toList(),
-          };
-
-          // Obtém o documento do usuário
-          var userDoc = await FirebaseFirestore.instance
-              .collection('usuarios')
-              .doc(user!.uid)
-              .get();
-
-          // Obtém a lista de cursoSemestreMateria
-          var userData = userDoc.data() as Map<String, dynamic>;
-          var cursoSemestreMateriaArray =
-              userData['cursoSemestreMateria'] as List<dynamic> ?? [];
-
-          // Encontra o índice do item correspondente ao curso e semestre, se existir
-          int index = cursoSemestreMateriaArray.indexWhere((item) =>
-              item['curso'] == widget.cursoId &&
-              item['semestre'] == widget.semestre);
-
-          if (index >= 0) {
-            // Se o item já existir, atualiza-o
-            cursoSemestreMateriaArray[index] = cursoSemestreMateria;
-          } else {
-            // Se o item não existir, adiciona-o
-            cursoSemestreMateriaArray.add(cursoSemestreMateria);
-          }
-
-          // Atualiza o documento do usuário
-          FirebaseFirestore.instance
-              .collection('usuarios')
-              .doc(user.uid)
-              .update({
-            'cursoSemestreMateria': cursoSemestreMateriaArray,
-          }).then((value) {
-            ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Matérias selecionadas com sucesso!')));
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => HomeScreen()),
-            );
-          }).catchError((error) {
-            ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Erro ao selecionar matérias: $error')));
-          });
-        },
+        onPressed: _salvarSelecoes,
         child: Icon(Icons.save),
+        backgroundColor: Color.fromRGBO(239, 153, 45, 1),
       ),
     );
+  }
+
+  void _updateMateriasSelecionadas(String materiaNome, bool isSelected) {
+    setState(() {
+      materiasSelecionadas[materiaNome] = isSelected;
+    });
+  }
+
+  Future<void> _salvarSelecoes() async {
+    if (materiasSelecionadas.isEmpty ||
+        !materiasSelecionadas.containsValue(true)) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Por favor, selecione pelo menos uma matéria.'),
+      ));
+      return;
+    }
+
+    var user = FirebaseAuth.instance.currentUser;
+    var cursoSemestreMateria = {
+      'curso': widget.cursoId,
+      'semestre': widget.semestre,
+      'materias': materiasSelecionadas.keys
+          .where((k) => materiasSelecionadas[k]!)
+          .toList(),
+    };
+
+    // Obtém o documento do usuário
+    var userDoc = await FirebaseFirestore.instance
+        .collection('usuarios')
+        .doc(user!.uid)
+        .get();
+    var userData = userDoc.data() as Map<String, dynamic>;
+    var cursoSemestreMateriaArray =
+        userData['cursoSemestreMateria'] as List<dynamic>? ?? [];
+
+    // Encontra o índice do item correspondente ao curso e semestre, se existir
+    int index = cursoSemestreMateriaArray.indexWhere((item) =>
+        item['curso'] == widget.cursoId && item['semestre'] == widget.semestre);
+
+    if (index >= 0) {
+      // Se o item já existir, atualiza-o
+      cursoSemestreMateriaArray[index] = cursoSemestreMateria;
+    } else {
+      // Se o item não existir, adiciona-o
+      cursoSemestreMateriaArray.add(cursoSemestreMateria);
+    }
+
+    // Atualiza o documento do usuário
+    await FirebaseFirestore.instance
+        .collection('usuarios')
+        .doc(user.uid)
+        .update({
+      'cursoSemestreMateria': cursoSemestreMateriaArray,
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Matérias selecionadas com sucesso!')));
+    Navigator.push(
+        context, MaterialPageRoute(builder: (context) => HomeScreen()));
   }
 }

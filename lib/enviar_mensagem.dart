@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'home.dart';
 
 class EnviarMensagemScreen extends StatefulWidget {
   final String? mensagemId;
@@ -104,10 +105,16 @@ class _EnviarMensagemScreenState extends State<EnviarMensagemScreen> {
       var user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         try {
+          var userDoc = await FirebaseFirestore.instance
+              .collection('usuarios')
+              .doc(user.uid)
+              .get();
+          var userData = userDoc.data() as Map<String, dynamic>;
           var data = {
             'titulo': _titulo,
             'mensagem': _mensagem,
             'autor': user.uid,
+            'nomeUsuario': userData['nomeUsuario'],
             'curso': _cursoSelecionado ?? 'Não especificado',
             'semestre': _semestreSelecionado ?? 'Não especificado',
             'materias': _materiasSelecionadas,

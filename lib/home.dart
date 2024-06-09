@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'enviar_mensagem.dart'; // Importe a tela de envio de mensagem
-import 'selecionar_curso.dart'; // Importe a tela de seleção de curso
+import 'enviar_mensagem.dart';
+import 'selecionar_curso.dart';
+import 'package:intl/intl.dart'; // Importação do pacote intl
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -20,7 +21,6 @@ class _HomeScreenState extends State<HomeScreen> {
       var userData = userDoc.data() as Map<String, dynamic>;
       var cursoSemestreMateria =
           userData['cursoSemestreMateria'] as List<dynamic>;
-
       List<Map<String, dynamic>> mensagens = [];
       for (var item in cursoSemestreMateria) {
         QuerySnapshot mensagensSnapshot = await FirebaseFirestore.instance
@@ -28,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
             .where('curso', isEqualTo: item['curso'])
             .where('semestre', isEqualTo: item['semestre'])
             .where('materias', arrayContainsAny: item['materias'])
+            .where('lida', isEqualTo: false) // Apenas mensagens não lidas
             .get();
         mensagens.addAll(mensagensSnapshot.docs
             .map((doc) => {'id': doc.id, ...doc.data() as Map<String, dynamic>})
@@ -38,6 +39,19 @@ class _HomeScreenState extends State<HomeScreen> {
     return [];
   }
 
+  Future<bool> isProfessor() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(user.uid)
+          .get();
+      var userData = userDoc.data() as Map<String, dynamic>;
+      return userData['tipoUsuario'] == 'Professor';
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,12 +60,8 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Color.fromRGBO(239, 153, 45, 1),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => SelecionarCursoScreen()),
-            );
-          },
+          onPressed: () => Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => SelecionarCursoScreen())),
         ),
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
@@ -61,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
             return Center(child: CircularProgressIndicator());
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('Nenhuma mensagem encontrada.'));
+            return Center(child: Text('Nenhuma mensagem não lida encontrada.'));
           }
 
           var mensagens = snapshot.data!;
@@ -72,41 +82,67 @@ class _HomeScreenState extends State<HomeScreen> {
               return ListTile(
                 title: Text(mensagem['titulo']),
                 subtitle: Text(mensagem['mensagem']),
-                trailing: Text(mensagem['data'].toDate().toString()),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => EnviarMensagemScreen(
-                        mensagemId: mensagem['id'],
-                        titulo: mensagem['titulo'],
-                        mensagem: mensagem['mensagem'],
-                        curso: mensagem['curso'],
-                        semestre: mensagem['semestre'],
-                        materias: List<String>.from(mensagem['materias']),
-                        data: mensagem['data'].toDate(),
+                trailing: Text(DateFormat('dd/MM/yyyy HH:mm')
+                    .format(mensagem['data'].toDate())), // Formatando a data
+                onTap: () async {
+                  bool isProf = await isProfessor();
+                  if (isProf) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EnviarMensagemScreen(
+                          mensagemId: mensagem['id'],
+                          titulo: mensagem['titulo'],
+                          mensagem: mensagem['mensagem'],
+                          curso: mensagem['curso'],
+                          semestre: mensagem['semestre'],
+                          materias: List<String>.from(mensagem['materias']),
+                          data: mensagem['data'].toDate(),
+                        ),
                       ),
-                    ),
-                  ).then((_) {
-                    setState(() {});
-                  });
+                    ).then((_) => setState(() {}));
+                  } else {
+                    // Mostrar detalhes da mensagem, sem opção de editar
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text(mensagem['titulo']),
+                        content: Text(mensagem['mensagem']),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text('Fechar'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
                 },
               );
             },
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => EnviarMensagemScreen()),
-          ).then((_) {
-            setState(() {});
-          });
+      floatingActionButton: FutureBuilder<bool>(
+        future: isProfessor(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Container(); // Esconder o botão enquanto carrega
+          }
+          if (snapshot.data == true) {
+            return FloatingActionButton(
+              onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => EnviarMensagemScreen()))
+                  .then((_) => setState(() {})),
+              child: Icon(Icons.add),
+              backgroundColor: Color.fromRGBO(239, 153, 45, 1),
+            );
+          } else {
+            return Container(); // Esconder o botão se não for professor
+          }
         },
-        child: Icon(Icons.add),
-        backgroundColor: Color.fromRGBO(239, 153, 45, 1),
       ),
     );
   }

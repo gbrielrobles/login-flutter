@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'selecionar_materia.dart';
 
 class SelecionarSemestreScreen extends StatelessWidget {
@@ -47,7 +48,8 @@ class SelecionarSemestreScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _editarSemestre(BuildContext context, DocumentSnapshot semestre) async {
+  Future<void> _editarSemestre(
+      BuildContext context, DocumentSnapshot semestre) async {
     final TextEditingController _semestreController =
         TextEditingController(text: semestre['nome']);
 
@@ -83,7 +85,8 @@ class SelecionarSemestreScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _excluirSemestre(BuildContext context, DocumentSnapshot semestre) async {
+  Future<void> _excluirSemestre(
+      BuildContext context, DocumentSnapshot semestre) async {
     await FirebaseFirestore.instance
         .collection('cursos')
         .doc(cursoId)
@@ -99,9 +102,24 @@ class SelecionarSemestreScreen extends StatelessWidget {
         title: Text('Selecione seu Semestre'),
         backgroundColor: Color.fromRGBO(239, 153, 45, 1),
         actions: [
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: () => _adicionarSemestre(context),
+          StreamBuilder<DocumentSnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('usuarios')
+                .doc(FirebaseAuth.instance.currentUser!.uid)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return SizedBox.shrink();
+              }
+              var userData = snapshot.data!.data() as Map<String, dynamic>;
+              if (userData['tipoUsuario'] == 'Professor') {
+                return IconButton(
+                  icon: Icon(Icons.add),
+                  onPressed: () => _adicionarSemestre(context),
+                );
+              }
+              return SizedBox.shrink();
+            },
           ),
         ],
       ),
@@ -126,18 +144,35 @@ class SelecionarSemestreScreen extends StatelessWidget {
               var semestre = snapshot.data!.docs[index];
               return ListTile(
                 title: Text(semestre.get('nome')),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.edit),
-                      onPressed: () => _editarSemestre(context, semestre),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.delete),
-                      onPressed: () => _excluirSemestre(context, semestre),
-                    ),
-                  ],
+                trailing: StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('usuarios')
+                      .doc(FirebaseAuth.instance.currentUser!.uid)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return SizedBox.shrink();
+                    }
+                    var userData =
+                        snapshot.data!.data() as Map<String, dynamic>;
+                    if (userData['tipoUsuario'] == 'Professor') {
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.edit),
+                            onPressed: () => _editarSemestre(context, semestre),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () =>
+                                _excluirSemestre(context, semestre),
+                          ),
+                        ],
+                      );
+                    }
+                    return SizedBox.shrink();
+                  },
                 ),
                 onTap: () {
                   Navigator.push(
