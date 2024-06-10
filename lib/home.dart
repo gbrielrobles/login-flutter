@@ -3,8 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'enviar_mensagem.dart'; // Importe a tela de envio de mensagem
-import 'selecionar_curso.dart'; // Importe a tela de seleção de curso
+import 'package:intl/intl.dart'; // Importação do pacote intl
+import 'enviar_mensagem.dart';
+import 'selecionar_curso.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,12 +15,63 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<Map<String, dynamic>> _filteredMessages = [];
-  bool _materiaFilter = false;
-  bool _lidoFilter = false;
-  List<String> _materiasUsuario = []; // Lista de matérias do usuário
+  List<Map<String, dynamic>> _mensagens = [];
+  bool _mostrarNaoLidas = false; // Inicialmente mostrando todas as mensagens
+  String _materiaSelecionada = '';
+  List<String> _materias = [];
 
-  Future<List<Map<String, dynamic>>> _fetchMensagens() async {
+  Future<void> _fetchMensagens() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      var userDoc = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(user.uid)
+          .get();
+      var userData = userDoc.data() as Map<String, dynamic>;
+      var cursoSemestreMateria =
+          userData['cursoSemestreMateria'] as List<dynamic>;
+      List<Map<String, dynamic>> mensagens = [];
+      _materias = [];
+
+      for (var item in cursoSemestreMateria) {
+        _materias.addAll(List<String>.from(item['materias']));
+        var mensagensSnapshot = await FirebaseFirestore.instance
+            .collection('mensagens')
+            .where('curso', isEqualTo: item['curso'])
+            .where('semestre', isEqualTo: item['semestre'])
+            .get();
+
+        for (var doc in mensagensSnapshot.docs) {
+          var msgData = doc.data();
+          bool isRead = msgData['visualizadores']?.contains(user.uid) ?? false;
+          if ((!_mostrarNaoLidas || !isRead) &&
+              (_materiaSelecionada.isEmpty ||
+                  msgData['materias'].contains(_materiaSelecionada))) {
+            mensagens.add({'id': doc.id, ...msgData});
+          }
+        }
+      }
+      setState(() {
+        _mensagens = mensagens;
+        _materias = _materias.toSet().toList();
+      });
+    }
+  }
+
+  void _markMessageAsRead(Map<String, dynamic> message) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null &&
+        !(message['visualizadores']?.contains(user.uid) ?? false)) {
+      FirebaseFirestore.instance
+          .collection('mensagens')
+          .doc(message['id'])
+          .update({
+        'visualizadores': FieldValue.arrayUnion([user.uid])
+      });
+    }
+  }
+
+  Future<bool> isProfessor() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
@@ -27,41 +79,15 @@ class _HomeScreenState extends State<HomeScreen> {
           .doc(user.uid)
           .get();
       var userData = userDoc.data() as Map<String, dynamic>;
-      var cursoSemestreMateria =
-          userData['cursoSemestreMateria'] as List<dynamic>;
-
-      List<Map<String, dynamic>> mensagens = [];
-      for (var item in cursoSemestreMateria) {
-        QuerySnapshot mensagensSnapshot = await FirebaseFirestore.instance
-            .collection('mensagens')
-            .where('curso', isEqualTo: item['curso'])
-            .where('semestre', isEqualTo: item['semestre'])
-            .where('materias', arrayContainsAny: item['materias'])
-            .get();
-        mensagens.addAll(mensagensSnapshot.docs
-            .map((doc) => {'id': doc.id, ...doc.data() as Map<String, dynamic>})
-            .toList());
-      }
-
-      // Lista de matérias do usuário
-      _materiasUsuario = [];
-      for (var item in cursoSemestreMateria) {
-        _materiasUsuario.addAll(item['materias'].cast<String>());
-      }
-
-      return mensagens;
+      return userData['tipoUsuario'] == 'Professor';
     }
-    return [];
+    return false;
   }
 
-  void filterMateria(List<Map<String, dynamic>> mensagens, String materia) {
-    setState(() {
-      _filteredMessages = mensagens.where((mensagem) {
-        List materias = mensagem['materias'];
-        return materias.contains(materia);
-      }).toList();
-      _materiaFilter = true;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _fetchMensagens(); // Chamar ao iniciar para carregar todas as mensagens
   }
 
   @override
@@ -72,104 +98,183 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => SelecionarCursoScreen()),
-            );
-          },
+          onPressed: () => Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => const SelecionarCursoScreen())),
         ),
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _fetchMensagens(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Nenhuma mensagem encontrada.'));
-          }
 
-          var mensagens = _materiaFilter ? _filteredMessages : snapshot.data!;
-          return ListView.builder(
-            itemCount: mensagens.length,
-            itemBuilder: (context, index) {
-              var mensagem = mensagens[index];
-              return ListTile(
-                title: Text(mensagem['titulo']),
-                subtitle: Text(mensagem['mensagem']),
-                trailing: Text(mensagem['data'].toDate().toString()),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => EnviarMensagemScreen(
-                        mensagemId: mensagem['id'],
-                        titulo: mensagem['titulo'],
-                        mensagem: mensagem['mensagem'],
-                        curso: mensagem['curso'],
-                        semestre: mensagem['semestre'],
-                        materias: List<String>.from(mensagem['materias']),
-                        data: mensagem['data'].toDate(),
-                      ),
-                    ),
-                  ).then((_) {
-                    setState(() {});
-                  });
-                },
-              );
-            },
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => EnviarMensagemScreen()),
-          ).then((_) {
-            setState(() {});
-          });
-        },
-        child: const Icon(Icons.add),
-        backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
-      ),
-      bottomNavigationBar: BottomAppBar(
-        color: const Color(0xFF3A5C33),
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 6.0,
-        child: IconTheme(
-          data: IconThemeData(color: Theme.of(context).colorScheme.onPrimary),
+body: _mensagens.isEmpty
+  ? const Center(child: Text('Nenhuma mensagem encontrada.'))
+  : ListView.builder(
+      itemCount: _mensagens.length,
+      itemBuilder: (context, index) {
+        var mensagem = _mensagens[index];
+        bool isRead = mensagem['visualizadores']
+                ?.contains(FirebaseAuth.instance.currentUser?.uid) ??
+            false;
+
+        // Estilo para mensagens
+        TextStyle titleStyle = TextStyle(
+          fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
+          color: isRead ? Colors.black : Colors.green,
+        );
+
+        TextStyle subtitleStyle = TextStyle(
+          fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
+          fontStyle: isRead ? FontStyle.normal : FontStyle.italic,
+          color: isRead ? Colors.grey[600] : Colors.green[700],
+        );
+
+        return ListTile(
+          title: Text(
+            mensagem['titulo'],
+            style: titleStyle,
+          ),
+          subtitle: Text(
+            mensagem['mensagem'],
+            style: subtitleStyle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          trailing: Text(DateFormat('dd/MM/yyyy HH:mm')
+              .format(mensagem['data'].toDate())),
+          onTap: () {
+            _markMessageAsRead(mensagem);
+            _handleMessageTap(mensagem);
+          },
+          tileColor: isRead ? null : Colors.green[50],
+        );
+      },
+    ),
+
+      bottomNavigationBar: SizedBox(
+        height: 68.0, //Define altura
+        child: BottomAppBar(
+          color: const Color(0xFF3A5C33), //Define cor
           child: Row(
-            mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-
-              //Botão de ver lista de matérias para filtrar
-              IconButton(
-                tooltip: 'Filtrar Por Matéria',
-                icon: const Icon(Icons.filter_list),
-                onPressed: () {
-                },
+              Expanded(
+                child: InkWell(
+                  onTap: () {
+                    _showFilterDialog();
+                    Feedback.forTap(context); //Emite som ao pressionar
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Icon(Icons.filter_list, size: 25, color: Colors.white),
+                        SizedBox(width: 9), //Espaço entre ícone e texto
+                        Text('Filtrar por Matérias', style: TextStyle(color: Colors.white, fontSize: 18)),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-
-              //Botão de filtrar lidas e não lidas 
-              IconButton(
-                tooltip: 'Filtrar Não Lidas',
-                icon: Icon(_lidoFilter
-                    ? Icons.mark_email_unread
-                    : Icons.mark_email_unread_outlined),
-                onPressed: () {
-                  setState(() {
-                    _lidoFilter = !_lidoFilter;
-                  });
-                },
+              Expanded(
+                child: InkWell(
+                  onTap: () {
+                    setState(() {
+                      _mostrarNaoLidas = !_mostrarNaoLidas;
+                      _fetchMensagens();
+                    });
+                    Feedback.forTap(context); //Emite som ao pressionar
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Icon(
+                          Icons.email,
+                          size: 25,
+                          color: _mostrarNaoLidas ? Colors.blue : Colors.grey,
+                        ),
+                        const SizedBox(width: 9), //Espaço entre ícone e o texto
+                        Text(
+                          'Filtrar Não Lidas',
+                          style: TextStyle(
+                            color: _mostrarNaoLidas ? Colors.blue : Colors.grey,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
         ),
       ),
+      floatingActionButton: FutureBuilder<bool>(
+        future: isProfessor(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Container(); // Esconder o botão enquanto carrega
+          }
+          return snapshot.data == true
+              ? FloatingActionButton(
+                  onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const EnviarMensagemScreen()))
+                      .then((_) => _fetchMensagens()),
+                  child: const Icon(Icons.add),
+                  backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
+                )
+              : Container(); // Esconder o botão se não for professor
+        },
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+    );
+  }
+
+  void _showFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Filtrar por Matéria'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: _materias
+                  .map((materia) => CheckboxListTile(
+                        title: Text(materia),
+                        value: _materiaSelecionada == materia,
+                        onChanged: (bool? value) {
+                          if (value != null && value) {
+                            setState(() {
+                              _materiaSelecionada = value ? materia : '';
+                              Navigator.pop(context);
+                              _fetchMensagens();
+                            });
+                          }
+                        },
+                      ))
+                  .toList(),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _handleMessageTap(Map<String, dynamic> mensagem) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(mensagem['titulo']),
+        content: Text(mensagem['mensagem']),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fechar'),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,4 +1,4 @@
-// ignore_for_file: use_super_parameters, prefer_const_constructors, library_private_types_in_public_api, use_build_context_synchronously
+// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -10,18 +10,18 @@ void main() {
 }
 
 class Cadastro extends StatelessWidget {
-  const Cadastro({Key? key}) : super(key: key);
+  const Cadastro({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       home: CadastroScreen(),
     );
   }
 }
 
 class CadastroScreen extends StatefulWidget {
-  const CadastroScreen({Key? key}) : super(key: key);
+  const CadastroScreen({super.key});
 
   @override
   _CadastroScreenState createState() => _CadastroScreenState();
@@ -32,7 +32,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
   final _chaveForm = GlobalKey<FormState>();
   var _nomeUsuario = '';
   var _senha = '';
-  var _ra = '';
+  var _cpf = '';
   var _email = '';
   var _tipoUsuario = 'Estudante';
 
@@ -55,7 +55,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
       body: Container(
         height: double.infinity,
         color: const Color.fromRGBO(58, 92, 51, 1),
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Form(
           key: _chaveForm,
           child: ListView(
@@ -150,7 +150,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                   },
                   onSaved: (value) {
                     // Salva o CPF institucional
-                    _ra = value!;
+                    _cpf = value!;
                   },
                 ),
               ),
@@ -188,7 +188,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                   },
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () async {
                   // Valida o formulário e salva os dados
@@ -209,7 +209,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                           .set({
                         'nomeUsuario': _nomeUsuario,
                         'senha': _senha,
-                        'R.A': _ra,
+                        'cpf': _cpf,
                         'email': _email,
                         'tipoUsuario': _tipoUsuario,
                       });
@@ -218,14 +218,14 @@ class _CadastroScreenState extends State<CadastroScreen> {
                       User? user = FirebaseAuth.instance.currentUser;
                       await user!.sendEmailVerification();
 
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                         content: Text(
                             'Verifique seu email para confirmar o cadastro'),
                       ));
                       Navigator.pushReplacement(
                           context,
                           // Volta para a tela de login em caso de erro
-                          MaterialPageRoute(builder: (context) => TelaLogin()));
+                          MaterialPageRoute(builder: (context) =>const TelaLogin()));
                     } on FirebaseAuthException catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                         content: Text('Erro ao criar usuário: ${e.message}'),
@@ -233,18 +233,18 @@ class _CadastroScreenState extends State<CadastroScreen> {
                     }
                   }
                 },
-                child: Text('Prosseguir'),
+                child: const Text('Prosseguir'),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               // Volta para a tela de login
               ElevatedButton(
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => TelaLogin()),
+                    MaterialPageRoute(builder: (context) => const TelaLogin()),
                   );
                 },
-                child: Text(
+                child: const Text(
                   'Cancelar',
                 ),
               ),
