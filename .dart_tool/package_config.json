@@ -272,10 +272,10 @@
       "languageVersion": "3.3"
     }
   ],
-  "generated": "2024-06-09T00:03:42.363701Z",
+  "generated": "2024-06-11T01:33:05.128148Z",
   "generator": "pub",
-  "generatorVersion": "3.4.1",
+  "generatorVersion": "3.4.3",
   "flutterRoot": "file:///C:/flutter/flutter",
-  "flutterVersion": "3.22.1",
+  "flutterVersion": "3.22.2",
   "pubCache": "file:///C:/Users/Rocha/AppData/Local/Pub/Cache"
 }

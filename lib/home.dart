@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart'; // Importação do pacote intl
 import 'enviar_mensagem.dart';
 import 'selecionar_curso.dart';
+import 'login.dart'; // Certifique-se de importar sua tela de login
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -80,6 +81,14 @@ class _HomeScreenState extends State<HomeScreen> {
     return false;
   }
 
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => TelaLogin()),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -97,6 +106,12 @@ class _HomeScreenState extends State<HomeScreen> {
           onPressed: () => Navigator.pushReplacement(context,
               MaterialPageRoute(builder: (context) => SelecionarCursoScreen())),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: _logout,
+          ),
+        ],
       ),
       body: _mensagens.isEmpty
           ? const Center(child: Text('Nenhuma mensagem encontrada.'))
@@ -109,9 +124,22 @@ class _HomeScreenState extends State<HomeScreen> {
                     false;
                 return ListTile(
                   title: Text(mensagem['titulo']),
-                  subtitle: Text(mensagem['mensagem']),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(mensagem['mensagem']),
+                      Text(
+                        'Professor: ${mensagem['nomeUsuario']}',
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                      Text(
+                        'Matéria: ${mensagem['materias'].join(", ")}',
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                    ],
+                  ),
                   trailing: Text(DateFormat('dd/MM/yyyy HH:mm')
-                      .format(mensagem['data'].toDate())),
+                      .format((mensagem['data'] as Timestamp).toDate())),
                   onTap: () {
                     _markMessageAsRead(mensagem);
                     _handleMessageTap(mensagem);
@@ -203,7 +231,15 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(mensagem['titulo']),
-        content: Text(mensagem['mensagem']),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(mensagem['mensagem']),
+            const SizedBox(height: 10),
+            Text('Professor: ${mensagem['nomeUsuario']}'),
+            Text('Matéria: ${mensagem['materias'].join(", ")}'),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
