@@ -100,6 +100,10 @@ class _SelecionarMateriaScreenState extends State<SelecionarMateriaScreen> {
         child: const Icon(Icons.save),
         backgroundColor: const Color.fromRGBO(239, 153, 45, 1),
       ),
+      bottomNavigationBar: Container(
+        height: 60,
+        color: const Color(0xFF3A5C33),
+      ),
     );
   }
 

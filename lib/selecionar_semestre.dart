@@ -191,6 +191,10 @@ class SelecionarSemestreScreen extends StatelessWidget {
           );
         },
       ),
+      bottomNavigationBar: Container(
+        height: 60,
+        color: const Color(0xFF3A5C33),
+      ),
     );
   }
 }

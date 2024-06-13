@@ -113,46 +113,53 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: _mensagens.isEmpty
-          ? const Center(child: Text('Nenhuma mensagem encontrada.'))
-          : ListView.builder(
-              itemCount: _mensagens.length,
-              itemBuilder: (context, index) {
-                var mensagem = _mensagens[index];
-                bool isRead = mensagem['visualizadores']
-                        ?.contains(FirebaseAuth.instance.currentUser?.uid) ??
-                    false;
-                return ListTile(
-                  title: Text(mensagem['titulo']),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(mensagem['mensagem']),
-                      Text(
-                        'Professor: ${mensagem['nomeUsuario']}',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                      Text(
-                        'Matéria: ${mensagem['materias'].join(", ")}',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                  trailing: Text(DateFormat('dd/MM/yyyy HH:mm')
-                      .format((mensagem['data'] as Timestamp).toDate())),
-                  onTap: () {
-                    _markMessageAsRead(mensagem);
-                    _handleMessageTap(mensagem);
-                  },
-                  tileColor: isRead
-                      ? null
-                      : Colors
-                          .green[50], // Alterar a cor para mensagens não lidas
-                );
-              },
-            ),
+      body: RefreshIndicator(
+        onRefresh: _fetchMensagens,
+        child: _mensagens.isEmpty
+            ? const Center(child: Text('Nenhuma mensagem encontrada.'))
+            : ListView.builder(
+                itemCount: _mensagens.length,
+                itemBuilder: (context, index) {
+                  var mensagem = _mensagens[index];
+                  bool isRead = mensagem['visualizadores']
+                          ?.contains(FirebaseAuth.instance.currentUser?.uid) ??
+                      false;
+                  return ListTile(
+                    title: Text(mensagem['titulo']),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          mensagem['mensagem'],
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          'Professor: ${mensagem['nomeUsuario']}',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                        Text(
+                          'Matéria: ${mensagem['materias'].join(", ")}',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                    trailing: Text(DateFormat('dd/MM/yyyy HH:mm')
+                        .format((mensagem['data'] as Timestamp).toDate())),
+                    onTap: () {
+                      _markMessageAsRead(mensagem);
+                      _handleMessageTap(mensagem);
+                    },
+                    tileColor: isRead
+                        ? null
+                        : const Color(
+                            0xFF3A5C33), // Alterar a cor para mensagens não lidas
+                  );
+                },
+              ),
+      ),
       bottomNavigationBar: BottomAppBar(
-        color: Colors.green[800], // Definindo a cor verde no BottomAppBar
+        color: const Color(0xFF3A5C33), // Definindo a cor verde no BottomAppBar
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
@@ -231,14 +238,18 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(mensagem['titulo']),
-        content: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(mensagem['mensagem']),
-            const SizedBox(height: 10),
-            Text('Professor: ${mensagem['nomeUsuario']}'),
-            Text('Matéria: ${mensagem['materias'].join(", ")}'),
-          ],
+        content: SingleChildScrollView(
+          child: IntrinsicHeight(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(mensagem['mensagem']),
+                const SizedBox(height: 10),
+                Text('Professor: ${mensagem['nomeUsuario']}'),
+                Text('Matéria: ${mensagem['materias'].join(", ")}'),
+              ],
+            ),
+          ),
         ),
         actions: [
           TextButton(
